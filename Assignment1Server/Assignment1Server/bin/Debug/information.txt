@@ -1,0 +1,3 @@
+Hasan denem 0 Hasandenem.txt
+Hasan guz 0 Hasanguz.txt
+Hasan guz 1 Hasanguz1.txt

@@ -1,0 +1,10 @@
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\bin\Debug\Assignment1Client.exe.config
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\bin\Debug\Assignment1Client.exe
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\bin\Debug\Assignment1Client.pdb
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\obj\Debug\Assignment1Client.csprojAssemblyReference.cache
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\obj\Debug\Assignment1Client.Form1.resources
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\obj\Debug\Assignment1Client.Properties.Resources.resources
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\obj\Debug\Assignment1Client.csproj.GenerateResource.cache
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\obj\Debug\Assignment1Client.csproj.CoreCompileInputs.cache
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\obj\Debug\Assignment1Client.exe
+C:\Users\ASUS\source\repos\Assignment1Client\Assignment1Client\obj\Debug\Assignment1Client.pdb
