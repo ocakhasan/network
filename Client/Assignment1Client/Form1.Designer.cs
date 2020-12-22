@@ -38,6 +38,7 @@
             this.logs = new System.Windows.Forms.RichTextBox();
             this.button_send = new System.Windows.Forms.Button();
             this.button_disconnect = new System.Windows.Forms.Button();
+            this.button_list_files = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -129,11 +130,23 @@
             this.button_disconnect.UseVisualStyleBackColor = true;
             this.button_disconnect.Click += new System.EventHandler(this.button_disconnect_Click);
             // 
+            // button_list_files
+            // 
+            this.button_list_files.Location = new System.Drawing.Point(104, 276);
+            this.button_list_files.Name = "button_list_files";
+            this.button_list_files.Size = new System.Drawing.Size(112, 23);
+            this.button_list_files.TabIndex = 10;
+            this.button_list_files.Text = "List Files";
+            this.button_list_files.UseVisualStyleBackColor = true;
+            this.button_list_files.Visible = false;
+            this.button_list_files.Click += new System.EventHandler(this.Button_list_files_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(783, 413);
+            this.Controls.Add(this.button_list_files);
             this.Controls.Add(this.button_disconnect);
             this.Controls.Add(this.button_send);
             this.Controls.Add(this.logs);
@@ -163,6 +176,7 @@
         private System.Windows.Forms.RichTextBox logs;
         private System.Windows.Forms.Button button_send;
         private System.Windows.Forms.Button button_disconnect;
+        private System.Windows.Forms.Button button_list_files;
     }
 }
 
