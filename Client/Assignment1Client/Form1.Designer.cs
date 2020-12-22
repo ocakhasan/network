@@ -73,6 +73,7 @@
             this.textBox_ip.Name = "textBox_ip";
             this.textBox_ip.Size = new System.Drawing.Size(100, 20);
             this.textBox_ip.TabIndex = 3;
+            this.textBox_ip.Text = "127.0.0.1";
             // 
             // textBox_port
             // 
@@ -80,6 +81,7 @@
             this.textBox_port.Name = "textBox_port";
             this.textBox_port.Size = new System.Drawing.Size(100, 20);
             this.textBox_port.TabIndex = 4;
+            this.textBox_port.Text = "5000";
             // 
             // textBox_name
             // 
@@ -87,6 +89,7 @@
             this.textBox_name.Name = "textBox_name";
             this.textBox_name.Size = new System.Drawing.Size(100, 20);
             this.textBox_name.TabIndex = 5;
+            this.textBox_name.Text = "Hasan";
             // 
             // button_connect
             // 
@@ -130,7 +133,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(783, 413);
             this.Controls.Add(this.button_disconnect);
             this.Controls.Add(this.button_send);
             this.Controls.Add(this.logs);
