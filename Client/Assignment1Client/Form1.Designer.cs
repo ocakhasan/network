@@ -39,6 +39,11 @@
             this.button_send = new System.Windows.Forms.Button();
             this.button_disconnect = new System.Windows.Forms.Button();
             this.button_list_files = new System.Windows.Forms.Button();
+            this.textBox_filename = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.button_create_copy = new System.Windows.Forms.Button();
+            this.button_delete = new System.Windows.Forms.Button();
+            this.button_download = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -124,7 +129,7 @@
             // 
             this.button_disconnect.Location = new System.Drawing.Point(173, 238);
             this.button_disconnect.Name = "button_disconnect";
-            this.button_disconnect.Size = new System.Drawing.Size(130, 23);
+            this.button_disconnect.Size = new System.Drawing.Size(115, 23);
             this.button_disconnect.TabIndex = 9;
             this.button_disconnect.Text = "DISCONNECT";
             this.button_disconnect.UseVisualStyleBackColor = true;
@@ -132,20 +137,74 @@
             // 
             // button_list_files
             // 
-            this.button_list_files.Location = new System.Drawing.Point(104, 276);
+            this.button_list_files.Location = new System.Drawing.Point(104, 267);
             this.button_list_files.Name = "button_list_files";
-            this.button_list_files.Size = new System.Drawing.Size(112, 23);
+            this.button_list_files.Size = new System.Drawing.Size(100, 23);
             this.button_list_files.TabIndex = 10;
             this.button_list_files.Text = "List Files";
             this.button_list_files.UseVisualStyleBackColor = true;
             this.button_list_files.Visible = false;
             this.button_list_files.Click += new System.EventHandler(this.Button_list_files_Click);
             // 
+            // textBox_filename
+            // 
+            this.textBox_filename.Location = new System.Drawing.Point(116, 331);
+            this.textBox_filename.Name = "textBox_filename";
+            this.textBox_filename.Size = new System.Drawing.Size(94, 20);
+            this.textBox_filename.TabIndex = 11;
+            this.textBox_filename.Text = "Hasan";
+            this.textBox_filename.Visible = false;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(52, 334);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(60, 13);
+            this.label4.TabIndex = 12;
+            this.label4.Text = "FILENAME";
+            this.label4.Visible = false;
+            // 
+            // button_create_copy
+            // 
+            this.button_create_copy.Location = new System.Drawing.Point(26, 357);
+            this.button_create_copy.Name = "button_create_copy";
+            this.button_create_copy.Size = new System.Drawing.Size(100, 23);
+            this.button_create_copy.TabIndex = 13;
+            this.button_create_copy.Text = "CREATE COPY";
+            this.button_create_copy.UseVisualStyleBackColor = true;
+            this.button_create_copy.Visible = false;
+            // 
+            // button_delete
+            // 
+            this.button_delete.Location = new System.Drawing.Point(132, 357);
+            this.button_delete.Name = "button_delete";
+            this.button_delete.Size = new System.Drawing.Size(78, 23);
+            this.button_delete.TabIndex = 16;
+            this.button_delete.Text = "DELETE";
+            this.button_delete.UseVisualStyleBackColor = true;
+            this.button_delete.Visible = false;
+            // 
+            // button_download
+            // 
+            this.button_download.Location = new System.Drawing.Point(216, 357);
+            this.button_download.Name = "button_download";
+            this.button_download.Size = new System.Drawing.Size(80, 23);
+            this.button_download.TabIndex = 17;
+            this.button_download.Text = "DOWNLOAD";
+            this.button_download.UseVisualStyleBackColor = true;
+            this.button_download.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(783, 413);
+            this.Controls.Add(this.button_download);
+            this.Controls.Add(this.button_delete);
+            this.Controls.Add(this.button_create_copy);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.textBox_filename);
             this.Controls.Add(this.button_list_files);
             this.Controls.Add(this.button_disconnect);
             this.Controls.Add(this.button_send);
@@ -177,6 +236,11 @@
         private System.Windows.Forms.Button button_send;
         private System.Windows.Forms.Button button_disconnect;
         private System.Windows.Forms.Button button_list_files;
+        private System.Windows.Forms.TextBox textBox_filename;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button button_create_copy;
+        private System.Windows.Forms.Button button_delete;
+        private System.Windows.Forms.Button button_download;
     }
 }
 

@@ -100,8 +100,11 @@ namespace Assignment1Client
                     }
                     else if (incomingMessage.StartsWith("!resp!"))
                     {
-                        incomingMessage = incomingMessage.Substring(6, incomingMessage.Length - 6);
-                        displayFileList(incomingMessage);
+                        if (incomingMessage.Contains("!resp!"))
+                        {
+                            incomingMessage = incomingMessage.Substring(6, incomingMessage.Length - 6);
+                            displayFileList(incomingMessage);
+                        }
                     }
                 }
                 catch
@@ -248,5 +251,6 @@ namespace Assignment1Client
                 connected = false;
             }
         }
+
     }
 }
