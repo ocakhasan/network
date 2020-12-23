@@ -16,7 +16,8 @@ namespace Assignment1Server
 {
     public partial class Form1 : Form
     {
-        String predeterminedPath = "";
+        String predeterminedPath = @"C:\Users\ASUS\Desktop\foldertowrite";
+
         List<String> names = new List<String>();
         Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         List<Socket> clientSockets = new List<Socket>();
@@ -27,6 +28,8 @@ namespace Assignment1Server
         bool listening = false;
         static string cwd = Directory.GetCurrentDirectory();
         static string fullPathDb = Path.Combine(cwd, "information.txt");
+        int currentUserIdx = 0;
+        Dictionary<Socket, int> clientIndexes = new Dictionary<Socket, int>();
 
 
 
@@ -78,7 +81,7 @@ namespace Assignment1Server
 
         private bool NameExists(string name)
         {
-            for(int i = 0; i < clientNames.Count; i++)
+            for (int i = 0; i < clientNames.Count; i++)
             {
                 if (clientNames[i] == name)
                 {
@@ -90,7 +93,7 @@ namespace Assignment1Server
 
         private int filenameExists(string client_name, string filename)
         {
-           
+
             string line;
             int count = -1;
             StreamReader file = new StreamReader(fullPathDb);
@@ -130,10 +133,10 @@ namespace Assignment1Server
                 try
                 {
                     Socket newClient = serverSocket.Accept();
-                    clientSockets.Add(newClient);
+                    //clientSockets.Add(newClient);
                     Thread receiveThread = new Thread(() => Receive(newClient)); // updated
                     receiveThread.Start();
-                    
+
                 }
                 catch
                 {
@@ -152,13 +155,62 @@ namespace Assignment1Server
 
         private string getFileNameFromString(string message, int index)
         {
-            return message.Substring(5, index - 6);
+            return message.Substring(5, index - 5);
         }
 
-        private void Receive(Socket thisClient) // updated
+        private string getFileList(string userName)
+        {
+            string line, resultList = "!resp!";
+            StreamReader file = new StreamReader(fullPathDb);
+            try
+            {
+                while ((line = file.ReadLine()) != null)
+                {
+                    string[] words = line.Split(' ');
+                    if (words[0] == userName)
+                    {
+                        string fileName = words[1];
+                        if (!resultList.Contains(fileName) && fileName.Length > 0)
+                        {
+                            resultList += fileName + " " + words[4] + " " + words[5] + "~";
+                        }
+                    }
+                }
+                return resultList;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("The process failed: {0}", e.ToString());
+            }
+            finally
+            {
+                file.Close();
+                file.Dispose();
+            }
+            return "";
+        }
+
+        private bool checkFileEnd(string message)
+        {
+            if (message.EndsWith("!end!"))
+            {
+                return true;
+            }
+            int messageLenght = message.Length;
+            if ((messageLenght == 1 && message == "!")
+                || (messageLenght == 2 && message == "d!")
+                || (messageLenght == 3 && message == "nd!")
+                || (messageLenght == 4 && message == "end!"))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private void Receive(Socket thisClient)
         {
             bool connected = true;
-
+            bool filenameExtracted = false;
             bool firstMessage = false;
 
             int ioc = 0;
@@ -172,13 +224,12 @@ namespace Assignment1Server
                         thisClient.Receive(clientNameBuffer);
                         string newclientName = Encoding.Default.GetString(clientNameBuffer);
                         newclientName = newclientName.Substring(0, newclientName.IndexOf('\0'));
-                        firstMessage = true;
 
                         if (NameExists(newclientName))
                         {
-                            clientSockets.Remove(thisClient);
-                            logs.AppendText("The client with " + newclientName +  " exists, socket not connected\n");
+                            logs.AppendText("The client with " + newclientName + " exists, socket not connected\n");
 
+                            connected = false;
                             Byte[] acceptanceBuffer = new Byte[64];
                             acceptanceBuffer = Encoding.Default.GetBytes("No");
                             thisClient.Send(acceptanceBuffer);
@@ -186,8 +237,15 @@ namespace Assignment1Server
                         else
                         {
                             logs.AppendText("Client with name " + newclientName + " is joined to server \n");
+
+                            clientIndexes[thisClient] = currentUserIdx;
+                            currentUserIdx++;
+
+                            // add new user
                             clientNames.Add(newclientName);
-                            clientFileCounts.Add(0);
+                            clientSockets.Add(thisClient);
+                            firstMessage = true;
+
                             Byte[] acceptanceBuffer = new Byte[64];
                             acceptanceBuffer = Encoding.Default.GetBytes("Yes");
                             thisClient.Send(acceptanceBuffer);
@@ -197,136 +255,150 @@ namespace Assignment1Server
                     else
                     {
                         int counter = 0;
+                        int bufferSize = 1000000;
 
-                        int num = 1024 * 500;
-                        Byte[] buffer = new Byte[num];                              //Düzelt burayı
+                        Byte[] buffer = new Byte[bufferSize];
                         thisClient.Receive(buffer);
+                        filenameExtracted = false;
+
                         string incomingMessage = Encoding.Default.GetString(buffer);
-                        //incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
-                        string file_message = "";
-                        string filename = "";
 
-                        if(incomingMessage.Length > 0)
-                        {
-                            int index = incomingMessage.IndexOf('.');
-                            filename = getFileNameFromString(incomingMessage, index);
-                            int message_size = incomingMessage.Length;
-                            incomingMessage = incomingMessage.Substring(index + 1);
-
-                            //logs.AppendText("incomming message is " + incomingMessage + "\n");
-                            file_message += incomingMessage;
-
-                        }
-
-
-                        while (incomingMessage.Length > 0)
-                        {
-                            
-
-
-                            
-                            Byte[] buffer2 = new Byte[num];
-
-                            thisClient.Receive(buffer2);
-                            counter++;
-                            string partialdata = Encoding.Default.GetString(buffer2);
-                            if(partialdata.IndexOf("\0") >= 0)
-                            {
-                                partialdata = partialdata.Substring(0, partialdata.IndexOf("\0"));
-                            }
-                            bool ends = partialdata.EndsWith("!end!");
-                            string end_string = partialdata.Substring(partialdata.Length - 5, 5);
-                            logs.AppendText("Counter is " + counter + "\n");
-                            //logs.AppendText("end string is " + end_string + "\n");
-                            if (partialdata.Length > 0)
-                            {
-                                file_message += partialdata;
-                            }
-                            if (end_string == "!end!")
-                            {
-                                logs.AppendText("partial data ends with !end!  with counter "+ counter + "\n");
-                                break;
-                            }
-
-
-/*
-                            else if(partialdata == "!end!")
-                            {
-                                logs.AppendText("end data is received \n");
-                                break;
-                            }
-*/
-
-                        }
-
-                        logs.AppendText("I am here \n");
                         ioc = clientSockets.IndexOf(thisClient);
-                        string clientName = clientNames[ioc];
-                        int fileCountNumber = filenameExists(clientName, filename);
-                        string filename_to_write = "";
-                        logs.AppendText("I am here 2\n");
-
-                        if (fileCountNumber != -1)
+                        // List the files of the user
+                        if (incomingMessage.StartsWith("!ll!"))
                         {
-
-                            filename_to_write = clientNames[ioc] + filename + fileCountNumber.ToString() +  ".txt";            //olması gereken clientNames[ioc] + clientFiles[ioc]+ ".txt"
+                            string clientName = clientNames[ioc];
+                            string fileList = getFileList(clientName);
+                            thisClient.Send(Encoding.Default.GetBytes(fileList));
                         }
-                        else
+                        else if (!incomingMessage.StartsWith("\0"))
                         {
-                            filename_to_write = clientNames[ioc] + filename  + ".txt";
-                        }
-                        logs.AppendText("I am here 3\n");
 
-                        using (StreamWriter sw = File.AppendText(fullPathDb))
-                        {
-                            string to_send = "";
-                            if(fileCountNumber != -1)
+                            string fileMessage = "";
+                            string filename = "";
+
+                            if (!filenameExtracted)
                             {
-                                to_send = clientNames[ioc] + " " + filename + " " + fileCountNumber + " " + filename_to_write;
+                                int index = incomingMessage.IndexOf('.');
+                                filename = getFileNameFromString(incomingMessage, index);
+                                incomingMessage = incomingMessage.Substring(index + 1);
+                                if (incomingMessage.EndsWith("\0"))
+                                {
+                                    incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
+                                }
+                                fileMessage += incomingMessage;
+                                filenameExtracted = true;
+                            }
+
+                            if (incomingMessage.EndsWith("\0"))
+                            {
+                                incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
+                            }
+                            bool doesEndWith = incomingMessage.EndsWith("!end!");
+                            while (!doesEndWith)
+                            {
+                                Byte[] buffer2 = new Byte[bufferSize];
+                                thisClient.Receive(buffer2);
+
+                                counter++;
+                                string partialdata = Encoding.Default.GetString(buffer2);
+                                if (partialdata.IndexOf("\0") >= 0)
+                                {
+                                    partialdata = partialdata.Substring(0, partialdata.IndexOf("\0"));
+                                }
+                                logs.AppendText("Counter is " + counter + "\n");
+                                if (partialdata.Length > 0)
+                                {
+                                    fileMessage += partialdata;
+                                }
+
+                                doesEndWith = checkFileEnd(partialdata);
+                                if (doesEndWith)
+                                {
+                                    logs.AppendText("partial data ends with !end!  with counter " + counter + "\n");
+                                    break;
+                                }
+                            }
+
+                            ioc = clientSockets.IndexOf(thisClient);
+                            string clientName = clientNames[ioc];
+                            string filename_to_write = "";
+
+                            int fileCountNumber = filenameExists(clientName, filename);
+
+                            // if file exist before.
+                            if (fileCountNumber != -1)
+                            {
+                                filename_to_write = clientNames[ioc] + "-" + filename + fileCountNumber.ToString() + ".txt";
                             }
                             else
                             {
-                                to_send = clientNames[ioc] + " " + filename + " " +  "0" + " " + filename_to_write;
+                                filename_to_write = clientNames[ioc] + "-" + filename + ".txt";
                             }
-                            sw.WriteLine(to_send); // Write text to .txt file
+
+                            // create a record in the db for the incoming file
+                            using (StreamWriter sw = File.AppendText(fullPathDb))
+                            {
+                                string to_send = "",
+                                    currDate = DateTime.Now.ToString("dd/MM/yyyy.HH:mm:ss");
+
+                                if (fileCountNumber != -1)
+                                {
+                                    to_send = clientNames[ioc] + " " + filename + " " + fileCountNumber
+                                        + " " + filename_to_write + " " + currDate + " " + fileMessage.Length;
+                                }
+                                else
+                                {
+                                    to_send = clientNames[ioc] + " " + filename + " " + "0"
+                                        + " " + filename_to_write + " " + currDate + " " + fileMessage.Length;
+                                }
+                                sw.WriteLine(to_send); // Write text to .txt file
+                            }
+                            logs.AppendText("I am here 4\n");
+
+                            if (fileMessage.IndexOf("\0") >= 0)
+                            {
+                                fileMessage.Substring(0, fileMessage.IndexOf("\0"));
+                            }
+
+                            using (StreamWriter sw = File.AppendText(predeterminedPath + "\\" + filename_to_write))
+                            {
+                                fileMessage = fileMessage.Substring(0, fileMessage.Length - 5);
+                                sw.WriteLine(fileMessage); // Write text to .txt file
+                            }
+                            logs.AppendText("Client " + clientNames[ioc] + " send a file called " + filename_to_write + "\n");
                         }
-                        logs.AppendText("I am here 4\n");
-
-                        using (StreamWriter sw = File.AppendText(predeterminedPath + "\\" + filename_to_write))
-                        {
-                            sw.WriteLine(file_message); // Write text to .txt file
-                        }
-
-                        logs.AppendText("Client " + clientNames[ioc] + " send a file called " + filename_to_write + "\n");
-                        
-
                     }
-                    
+
                 }
                 catch (Exception error)
                 {
-                    logs.AppendText("The process failed: " +  error.ToString());
+                    logs.AppendText("Errro: " + error.ToString() + "\n");
                     if (!terminating)
                     {
                         logs.AppendText("A client has disconnected\n");
                     }
-                    thisClient.Close();
+                    int thisClientIdx = clientIndexes[thisClient];
+
+                    clientIndexes.Remove(thisClient);
+                    currentUserIdx--;
+
                     clientSockets.Remove(thisClient);
-                    clientNames.Remove(clientNames[ioc]);
+                    clientNames.Remove(clientNames[thisClientIdx]);
+
                     connected = false;
+                    thisClient.Close();
                 }
             }
         }
 
         private void button_file_Click(object sender, EventArgs e)
         {
-            
             FolderBrowserDialog dialog = new FolderBrowserDialog();
-            //dialog.Filter = "Text files | *.txt"; // file types, that will be allowed to upload
-            //dialog.Multiselect = false; // allow/deny user to upload more than one file at a time
             if (dialog.ShowDialog() == DialogResult.OK) // if user clicked OK
             {
                 predeterminedPath = dialog.SelectedPath; // get name of file
+                Console.WriteLine(predeterminedPath);
                 logs.AppendText("Database folder set to: " + predeterminedPath + "\n");
             }
         }
@@ -335,7 +407,6 @@ namespace Assignment1Server
         {
             terminating = true;
             Environment.Exit(0);
-
         }
     }
 }

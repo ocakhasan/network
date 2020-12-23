@@ -8,3 +8,13 @@ C:\Users\ASUS\Desktop\ocakhasan_Ocak_Hasan_Step1\Client\Assignment1Client\obj\De
 C:\Users\ASUS\Desktop\ocakhasan_Ocak_Hasan_Step1\Client\Assignment1Client\obj\Debug\Assignment1Client.csproj.CoreCompileInputs.cache
 C:\Users\ASUS\Desktop\ocakhasan_Ocak_Hasan_Step1\Client\Assignment1Client\obj\Debug\Assignment1Client.exe
 C:\Users\ASUS\Desktop\ocakhasan_Ocak_Hasan_Step1\Client\Assignment1Client\obj\Debug\Assignment1Client.pdb
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\bin\Debug\Assignment1Client.exe.config
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\bin\Debug\Assignment1Client.exe
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\bin\Debug\Assignment1Client.pdb
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\obj\Debug\Assignment1Client.csprojAssemblyReference.cache
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\obj\Debug\Assignment1Client.Form1.resources
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\obj\Debug\Assignment1Client.Properties.Resources.resources
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\obj\Debug\Assignment1Client.csproj.GenerateResource.cache
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\obj\Debug\Assignment1Client.csproj.CoreCompileInputs.cache
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\obj\Debug\Assignment1Client.exe
+C:\Users\ASUS\Desktop\Fall 20-21\CS408\network\Client\Assignment1Client\obj\Debug\Assignment1Client.pdb
