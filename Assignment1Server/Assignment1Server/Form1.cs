@@ -189,17 +189,17 @@ namespace Assignment1Server
         {
             try
             {
+                // now, filename does not contain any file extension
+                if (filename.EndsWith(".txt"))
+                {
+                    filename = filename.Substring(0, filename.Length - 4);
+                }
+
                 int fileCountNumber = filenameExists(clientName, filename);
                 if (fileCountNumber == -1)
                 {
                     logs.AppendText(filename + " couldn't found for the user " + clientName);
                     return false;
-                }
-
-                // now, filename does not contain any file extension
-                if (filename.EndsWith(".txt"))
-                {
-                    filename = filename.Substring(0, filename.Length - 4);
                 }
 
                 string filename_to_write = "";
