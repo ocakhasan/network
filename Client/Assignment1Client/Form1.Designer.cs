@@ -40,7 +40,7 @@
             this.button_disconnect = new System.Windows.Forms.Button();
             this.button_list_files = new System.Windows.Forms.Button();
             this.textBox_filename = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
+            this.label_filename = new System.Windows.Forms.Label();
             this.button_create_copy = new System.Windows.Forms.Button();
             this.button_delete = new System.Windows.Forms.Button();
             this.button_download = new System.Windows.Forms.Button();
@@ -155,15 +155,15 @@
             this.textBox_filename.Text = "Hasan";
             this.textBox_filename.Visible = false;
             // 
-            // label4
+            // label_filename
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(52, 334);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(60, 13);
-            this.label4.TabIndex = 12;
-            this.label4.Text = "FILENAME";
-            this.label4.Visible = false;
+            this.label_filename.AutoSize = true;
+            this.label_filename.Location = new System.Drawing.Point(52, 334);
+            this.label_filename.Name = "label_filename";
+            this.label_filename.Size = new System.Drawing.Size(60, 13);
+            this.label_filename.TabIndex = 12;
+            this.label_filename.Text = "FILENAME";
+            this.label_filename.Visible = false;
             // 
             // button_create_copy
             // 
@@ -174,6 +174,7 @@
             this.button_create_copy.Text = "CREATE COPY";
             this.button_create_copy.UseVisualStyleBackColor = true;
             this.button_create_copy.Visible = false;
+            this.button_create_copy.Click += new System.EventHandler(this.Button_create_copy_Click);
             // 
             // button_delete
             // 
@@ -203,7 +204,7 @@
             this.Controls.Add(this.button_download);
             this.Controls.Add(this.button_delete);
             this.Controls.Add(this.button_create_copy);
-            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label_filename);
             this.Controls.Add(this.textBox_filename);
             this.Controls.Add(this.button_list_files);
             this.Controls.Add(this.button_disconnect);
@@ -237,7 +238,7 @@
         private System.Windows.Forms.Button button_disconnect;
         private System.Windows.Forms.Button button_list_files;
         private System.Windows.Forms.TextBox textBox_filename;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label_filename;
         private System.Windows.Forms.Button button_create_copy;
         private System.Windows.Forms.Button button_delete;
         private System.Windows.Forms.Button button_download;

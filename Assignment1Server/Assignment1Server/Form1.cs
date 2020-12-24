@@ -133,7 +133,6 @@ namespace Assignment1Server
                 try
                 {
                     Socket newClient = serverSocket.Accept();
-                    //clientSockets.Add(newClient);
                     Thread receiveThread = new Thread(() => Receive(newClient)); // updated
                     receiveThread.Start();
 
@@ -156,6 +155,101 @@ namespace Assignment1Server
         private string getFileNameFromString(string message, int index)
         {
             return message.Substring(5, index - 5);
+        }
+
+        // getFieldFromDB returns a field for the specified file name.
+        private string getFieldFromDB(int fieldIndex, string filename, string clientName)
+        {
+            string line = "";
+            StreamReader file = new StreamReader(fullPathDb);
+            try
+            {
+                while ((line = file.ReadLine()) != null)
+                {
+                    string[] words = line.Split(' ');
+                    if (words[1] == filename && words[0] == clientName)
+                    {
+                        return words[fieldIndex];
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("The process failed: {0}", e.ToString());
+            }
+            finally
+            {
+                file.Close();
+                file.Dispose();
+            }
+            return "";
+        }
+
+        private bool createFileCopy(string filename, string clientName)
+        {
+            try
+            {
+                int fileCountNumber = filenameExists(clientName, filename);
+                if (fileCountNumber == -1)
+                {
+                    logs.AppendText(filename + " couldn't found for the user " + clientName);
+                    return false;
+                }
+
+                // now, filename does not contain any file extension
+                if (filename.EndsWith(".txt"))
+                {
+                    filename = filename.Substring(0, filename.Length - 4);
+                }
+
+                string filename_to_write = "";
+                if (fileCountNumber < 10)
+                {
+                    filename_to_write = clientName + "-" + filename + "0" + fileCountNumber.ToString() + ".txt";
+                }
+                else
+                {
+                    filename_to_write = clientName + "-" + filename + fileCountNumber.ToString() + ".txt";
+                }
+
+                string sourceFilename = clientName + "-" + filename + ".txt";
+                string sourceFileDest = Path.Combine(predeterminedPath, sourceFilename);
+                string copiedFileDest = Path.Combine(predeterminedPath, filename_to_write);
+
+                File.Copy(sourceFileDest, copiedFileDest, true);
+
+                string fileSize = getFieldFromDB(5, filename, clientName);
+
+                // create a record in the db for the copied file
+                using (StreamWriter sw = File.AppendText(fullPathDb))
+                {
+                    string to_send = "",
+                        currDate = DateTime.Now.ToString("dd/MM/yyyy.HH:mm:ss");
+
+                    if (fileSize == "")
+                    {
+                        logs.AppendText("File size for the " + filename + " couldn't found in the DB.\n");
+                    }
+                    if (fileCountNumber != -1)
+                    {
+                        to_send = clientName + " " + filename + " " + fileCountNumber
+                            + " " + filename_to_write + " " + currDate + " " + fileSize;
+                    }
+                    else
+                    {
+                        to_send = clientName + " " + filename + " " + "0"
+                            + " " + filename_to_write + " " + currDate + " " + fileSize;
+                    }
+                    sw.WriteLine(to_send); // Write text to .txt file
+                }
+
+                return true;
+            }
+            catch (Exception err)
+            {
+                logs.AppendText("Error in creating file copy " + err.ToString() + "\n");
+                return false;
+            }
         }
 
         private string getFileList(string userName)
@@ -262,6 +356,10 @@ namespace Assignment1Server
                         filenameExtracted = false;
 
                         string incomingMessage = Encoding.Default.GetString(buffer);
+                        if (incomingMessage.EndsWith("\0"))
+                        {
+                            incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
+                        }
 
                         ioc = clientSockets.IndexOf(thisClient);
                         // List the files of the user
@@ -270,6 +368,21 @@ namespace Assignment1Server
                             string clientName = clientNames[ioc];
                             string fileList = getFileList(clientName);
                             thisClient.Send(Encoding.Default.GetBytes(fileList));
+                        }
+                        else if (incomingMessage.StartsWith("!cc!"))
+                        {
+                            string clientName = clientNames[ioc];
+                            string filename = incomingMessage.Substring(4, incomingMessage.Length - 4);
+                            bool doesCopied = createFileCopy(filename, clientName);
+                            if (doesCopied)
+                            {
+                                logs.AppendText(filename + " is copied for user " + clientName + "\n");
+                            }
+                            else
+                            {
+                                logs.AppendText(filename + " couldn't copied for user " + clientName + "\n");
+                            }
+
                         }
                         else if (!incomingMessage.StartsWith("\0"))
                         {
@@ -282,10 +395,6 @@ namespace Assignment1Server
                                 int index = incomingMessage.IndexOf('.');
                                 filename = getFileNameFromString(incomingMessage, index);
                                 incomingMessage = incomingMessage.Substring(index + 1);
-                                if (incomingMessage.EndsWith("\0"))
-                                {
-                                    incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
-                                }
                                 fileMessage += incomingMessage;
                                 filenameExtracted = true;
                             }
@@ -329,7 +438,15 @@ namespace Assignment1Server
                             // if file exist before.
                             if (fileCountNumber != -1)
                             {
-                                filename_to_write = clientNames[ioc] + "-" + filename + fileCountNumber.ToString() + ".txt";
+                                //filename_to_write = clientNames[ioc] + "-" + filename + fileCountNumber.ToString() +  ".txt";            
+                                if (fileCountNumber < 10)
+                                {
+                                    filename_to_write = clientNames[ioc] + "-" + filename + "0" + fileCountNumber.ToString() + ".txt";
+                                }
+                                else
+                                {
+                                    filename_to_write = clientNames[ioc] + "-" + filename + fileCountNumber.ToString() + ".txt";
+                                }
                             }
                             else
                             {
@@ -354,7 +471,6 @@ namespace Assignment1Server
                                 }
                                 sw.WriteLine(to_send); // Write text to .txt file
                             }
-                            logs.AppendText("I am here 4\n");
 
                             if (fileMessage.IndexOf("\0") >= 0)
                             {
@@ -366,7 +482,6 @@ namespace Assignment1Server
                                 fileMessage = fileMessage.Substring(0, fileMessage.Length - 5);
                                 sw.WriteLine(fileMessage); // Write text to .txt file
                             }
-                            logs.AppendText("Client " + clientNames[ioc] + " send a file called " + filename_to_write + "\n");
                         }
                     }
 

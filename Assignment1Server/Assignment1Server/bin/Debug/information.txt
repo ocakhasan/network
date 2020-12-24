@@ -1,21 +1,7 @@
-Hasan yolla 0 Hasan-yolla.txt 22/12/2020.18:01:18 18
-Hasan note 0 Hasan-note.txt 22/12/2020.18:09:49 19578
-Hasan kapital 0 Hasan-kapital.txt 22/12/2020.18:11:44 179605637
-Hasan  0 Hasan-.txt 22/12/2020.18:12:10 0
-Hasan kapital 1 Hasan-kapital1.txt 22/12/2020.18:13:25 179605637
-Hasan kapital 2 Hasan-kapital2.txt 22/12/2020.18:16:03 179605637
-Hasan mbfile 0 Hasan-mbfile.txt 22/12/2020.18:20:41 1184391
-Hasan kapital 3 Hasan-kapital3.txt 23/12/2020.21:41:59 179605637
-Hasan lol 0 Hasan-lol.txt 23/12/2020.21:42:22 3638
-Hasan mbfile 1 Hasan-mbfile1.txt 23/12/2020.21:57:45 1184391
-Hasan kapital 4 Hasan-kapital4.txt 23/12/2020.21:58:25 179605637
-Hasan2 mbfile 0 Hasan2-mbfile.txt 23/12/2020.22:01:33 1184391
-Hasan kapital 5 Hasan-kapital5.txt 23/12/2020.22:01:34 179605637
-Hasan2 mbfile 1 Hasan2-mbfile1.txt 23/12/2020.22:01:54 1184391
-Hasan mbfile 2 Hasan-mbfile2.txt 23/12/2020.22:01:59 1184391
-Hasan2 mbfile 2 Hasan2-mbfile2.txt 23/12/2020.22:31:12 1184391
-Hasan mbfile 3 Hasan-mbfile3.txt 23/12/2020.22:31:20 1184391
-Hasan mbfile 4 Hasan-mbfile4.txt 23/12/2020.22:31:30 1184391
-Hasan2 mbfile 3 Hasan2-mbfile3.txt 23/12/2020.22:31:35 1184391
-Hasan2 kapital 0 Hasan2-kapital.txt 23/12/2020.22:32:15 179605637
-Hasan2 mbfile 4 Hasan2-mbfile4.txt 23/12/2020.22:32:37 1184391
+bb yolla 0 bb-yolla.txt 24/12/2020.22:58:20 20
+bb yolla 1 bb-yolla01.txt24/12/2020.23:04:09 20
+bb yolla 2 bb-yolla02.txt24/12/2020.23:04:10 20
+bb yolla 3 bb-yolla03.txt24/12/2020.23:04:12 20
+bb yolla 4 bb-yolla04.txt 24/12/2020.23:04:54 20
+bb yolla 5 bb-yolla05.txt 24/12/2020.23:04:56 20
+bb yolla 6 bb-yolla06.txt 24/12/2020.23:04:57 20

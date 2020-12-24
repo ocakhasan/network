@@ -45,7 +45,8 @@ namespace Assignment1Client
                     button_connect.Enabled = false;
                     button_disconnect.Enabled = true;
                     button_send.Enabled = true;
-                    button_list_files.Visible = true;
+                    enableUserInputFields(true);
+                    //button_list_files.Visible = true;
                     connected = true;
 
                     Byte[] namebuffer = new Byte[64];
@@ -65,6 +66,16 @@ namespace Assignment1Client
             {
                 logs.AppendText("Check the port\n");
             }
+        }
+
+        private void enableUserInputFields(bool option)
+        {
+            button_list_files.Visible = option;
+            label_filename.Visible = option;
+            textBox_filename.Visible = option;
+            button_delete.Visible = option;
+            button_create_copy.Visible = option;
+            button_download.Visible = option;
         }
 
         private void Receive()
@@ -95,7 +106,8 @@ namespace Assignment1Client
                         button_connect.Enabled = true;
                         button_send.Enabled = false;
                         button_disconnect.Enabled = false;
-                        button_list_files.Visible = false;
+                        enableUserInputFields(false);
+                        //button_list_files.Visible = false;
                         connected = false;
                     }
                     else if (incomingMessage.StartsWith("!resp!"))
@@ -114,7 +126,8 @@ namespace Assignment1Client
                         logs.AppendText("The server has disconnected\n");
                         button_connect.Enabled = true;
                         button_send.Enabled = false;
-                        button_list_files.Visible = false;
+                        enableUserInputFields(false);
+                        //button_list_files.Visible = false;
                     }
 
                     clientSocket.Close();
@@ -223,7 +236,8 @@ namespace Assignment1Client
             button_send.Enabled = false;
             button_disconnect.Enabled = false;
             button_connect.Enabled = true;
-            button_list_files.Visible = false;
+            enableUserInputFields(false);
+            //button_list_files.Visible = false;
         }
 
         private void Button_list_files_Click(object sender, EventArgs e)
@@ -244,7 +258,8 @@ namespace Assignment1Client
                     logs.AppendText("The server has disconnected\n");
                     button_connect.Enabled = true;
                     button_send.Enabled = false;
-                    button_list_files.Visible = false;
+                    enableUserInputFields(false);
+                    //button_list_files.Visible = false;
                 }
 
                 clientSocket.Close();
@@ -252,5 +267,30 @@ namespace Assignment1Client
             }
         }
 
+        private void Button_create_copy_Click(object sender, EventArgs e)
+        {
+
+            string inputFilename = textBox_filename.Text;
+            string createCopyCommand = "!cc!" + inputFilename;
+            try
+            {
+                Byte[] commandBuffer = new Byte[64];
+                commandBuffer = Encoding.Default.GetBytes(createCopyCommand);
+                clientSocket.Send(commandBuffer);
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
     }
 }
