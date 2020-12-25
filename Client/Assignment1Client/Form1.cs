@@ -77,6 +77,8 @@ namespace Assignment1Client
             button_delete.Visible = option;
             button_create_copy.Visible = option;
             button_download.Visible = option;
+            button_make_public.Visible = option;
+            button_get_public.Visible = option;
         }
 
         private void Receive()
@@ -127,6 +129,11 @@ namespace Assignment1Client
                         incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
                         logs.AppendText(incomingMessage + "\n");
                     }
+                    else if (incomingMessage.StartsWith("!err!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
+                        logs.AppendText(incomingMessage + "\n");
+                    }
                     else if (incomingMessage.StartsWith("!df!"))
                     {
                         string filename = textBox_filename.Text;
@@ -164,16 +171,40 @@ namespace Assignment1Client
                             }
                         }
                         string downloadedFilePath = Path.Combine(downloadFolder, filename);
-                        if(incomingMessage.EndsWith("!end!"))
+                        if (incomingMessage.EndsWith("!end!"))
                         {
                             incomingMessage = incomingMessage.Substring(0, incomingMessage.Length - 5);
                         }
                         logs.AppendText(filename + " is saving.\n");
-                        using (StreamWriter sw = File.CreateText(downloadedFilePath)) 
+                        using (StreamWriter sw = File.CreateText(downloadedFilePath))
                         {
                             sw.WriteLine(incomingMessage);
                         }
                         logs.AppendText(filename + " is downloaded into " + downloadFolder + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!mp!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(4, incomingMessage.Length - 4);
+                        logs.AppendText(incomingMessage + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!pll!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
+                        string[] publicFilesArr = incomingMessage.Split('~');
+                        logs.AppendText("PUBLIC FILES\n");
+                        foreach (string fileInfo in publicFilesArr)
+                        {
+                            string[] eachInfo = fileInfo.Split(' ');
+                            if (eachInfo.Length > 0 && eachInfo[0].Length > 0)
+                            {
+                                logs.AppendText("--------------------\n");
+                                logs.AppendText("OWNER:" + eachInfo[0] + "\n" +
+                                    "FILENAME:" + eachInfo[1] + " \n" +
+                                    "CREATED AT: " + eachInfo[3] + " \n" +
+                                    "SIZE:" + eachInfo[2] + "\n");
+                                logs.AppendText("--------------------\n");
+                            }
+                        }
                     }
                 }
                 catch
@@ -301,7 +332,6 @@ namespace Assignment1Client
             {
                 Byte[] commandBuffer = new Byte[64];
                 commandBuffer = Encoding.Default.GetBytes(listingCommand);
-
                 clientSocket.Send(commandBuffer);
             }
             catch (Exception error)
@@ -313,7 +343,6 @@ namespace Assignment1Client
                     button_connect.Enabled = true;
                     button_send.Enabled = false;
                     enableUserInputFields(false);
-                    //button_list_files.Visible = false;
                 }
 
                 clientSocket.Close();
@@ -405,6 +434,59 @@ namespace Assignment1Client
                 commandBuffer = Encoding.Default.GetBytes(downloadFileCommand);
                 clientSocket.Send(commandBuffer);
                 logs.AppendText("Download started ...\n");
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            string inputFilename = textBox_filename.Text;
+            string makePublicCommand = "!mp!" + inputFilename;
+
+            try
+            {
+
+                Byte[] commandBuffer = new Byte[512];
+                commandBuffer = Encoding.Default.GetBytes(makePublicCommand);
+                clientSocket.Send(commandBuffer);
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+
+        }
+
+        private void Button_get_public_Click(object sender, EventArgs e)
+        {
+            string filename = textBox_filename.Text;
+            string listingCommand = "!pll!" + filename;
+            try
+            {
+                Byte[] commandBuffer = new Byte[64];
+                commandBuffer = Encoding.Default.GetBytes(listingCommand);
+                clientSocket.Send(commandBuffer);
             }
             catch (Exception error)
             {

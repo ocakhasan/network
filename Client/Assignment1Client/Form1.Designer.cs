@@ -44,6 +44,8 @@
             this.button_create_copy = new System.Windows.Forms.Button();
             this.button_delete = new System.Windows.Forms.Button();
             this.button_download = new System.Windows.Forms.Button();
+            this.button_make_public = new System.Windows.Forms.Button();
+            this.button_get_public = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -191,18 +193,42 @@
             // 
             this.button_download.Location = new System.Drawing.Point(216, 357);
             this.button_download.Name = "button_download";
-            this.button_download.Size = new System.Drawing.Size(80, 23);
+            this.button_download.Size = new System.Drawing.Size(92, 23);
             this.button_download.TabIndex = 17;
             this.button_download.Text = "DOWNLOAD";
             this.button_download.UseVisualStyleBackColor = true;
             this.button_download.Visible = false;
             this.button_download.Click += new System.EventHandler(this.Button_download_Click);
             // 
+            // button_make_public
+            // 
+            this.button_make_public.Location = new System.Drawing.Point(216, 331);
+            this.button_make_public.Name = "button_make_public";
+            this.button_make_public.Size = new System.Drawing.Size(92, 23);
+            this.button_make_public.TabIndex = 18;
+            this.button_make_public.Text = "MAKE PUBLIC";
+            this.button_make_public.UseVisualStyleBackColor = true;
+            this.button_make_public.Visible = false;
+            this.button_make_public.Click += new System.EventHandler(this.Button1_Click);
+            // 
+            // button_get_public
+            // 
+            this.button_get_public.Location = new System.Drawing.Point(116, 386);
+            this.button_get_public.Name = "button_get_public";
+            this.button_get_public.Size = new System.Drawing.Size(112, 23);
+            this.button_get_public.TabIndex = 19;
+            this.button_get_public.Text = "GET PUBLIC FILES";
+            this.button_get_public.UseVisualStyleBackColor = true;
+            this.button_get_public.Visible = false;
+            this.button_get_public.Click += new System.EventHandler(this.Button_get_public_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(783, 413);
+            this.Controls.Add(this.button_get_public);
+            this.Controls.Add(this.button_make_public);
             this.Controls.Add(this.button_download);
             this.Controls.Add(this.button_delete);
             this.Controls.Add(this.button_create_copy);
@@ -244,6 +270,8 @@
         private System.Windows.Forms.Button button_create_copy;
         private System.Windows.Forms.Button button_delete;
         private System.Windows.Forms.Button button_download;
+        private System.Windows.Forms.Button button_make_public;
+        private System.Windows.Forms.Button button_get_public;
     }
 }
 
