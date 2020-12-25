@@ -196,6 +196,7 @@
             this.button_download.Text = "DOWNLOAD";
             this.button_download.UseVisualStyleBackColor = true;
             this.button_download.Visible = false;
+            this.button_download.Click += new System.EventHandler(this.Button_download_Click);
             // 
             // Form1
             // 

@@ -19,6 +19,7 @@ namespace Assignment1Client
         bool connected = false;
         Socket clientSocket;
         string name;
+        string downloadFolder = "";
 
 
         public Form1()
@@ -126,6 +127,54 @@ namespace Assignment1Client
                         incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
                         logs.AppendText(incomingMessage + "\n");
                     }
+                    else if (incomingMessage.StartsWith("!df!"))
+                    {
+                        string filename = textBox_filename.Text;
+                        if (!filename.EndsWith(".txt"))
+                        {
+                            filename += ".txt";
+                        }
+                        int counter = 1;
+                        incomingMessage = incomingMessage.Substring(4, incomingMessage.Length - 4);
+                        int incomingSize = incomingMessage.Length;
+                        if (incomingMessage.Length == bufferSize - 4)
+                        {
+                            while (true)
+                            {
+                                Byte[] buffer2 = new Byte[bufferSize];
+                                clientSocket.Receive(buffer2);
+                                string partialdata = Encoding.Default.GetString(buffer2);
+                                if (partialdata.IndexOf("\0") >= 0)
+                                {
+                                    partialdata = partialdata.Substring(0, partialdata.IndexOf("\0"));
+                                }
+                                logs.AppendText("Counter is " + counter + "\n");
+                                counter++;
+
+                                if (partialdata.EndsWith("!end!"))
+                                {
+                                    partialdata = partialdata.Substring(0, partialdata.Length - 5);
+                                    incomingMessage += partialdata;
+                                    break;
+                                }
+                                if (partialdata.Length > 0)
+                                {
+                                    incomingMessage += partialdata;
+                                }
+                            }
+                        }
+                        string downloadedFilePath = Path.Combine(downloadFolder, filename);
+                        if(incomingMessage.EndsWith("!end!"))
+                        {
+                            incomingMessage = incomingMessage.Substring(0, incomingMessage.Length - 5);
+                        }
+                        logs.AppendText(filename + " is saving.\n");
+                        using (StreamWriter sw = File.CreateText(downloadedFilePath)) 
+                        {
+                            sw.WriteLine(incomingMessage);
+                        }
+                        logs.AppendText(filename + " is downloaded into " + downloadFolder + "\n");
+                    }
                 }
                 catch
                 {
@@ -203,13 +252,12 @@ namespace Assignment1Client
                     int length_message = message.Length;
 
                     logs.AppendText("Dosya boyutu " + length_message + "\n");
-                    int num = 500 * 1024;
                     int bufferSize = 1000000;
 
 
                     int howmany = (length_message / bufferSize) + 1;
-
                     logs.AppendText("how many is " + howmany + "\n");
+
                     int cur_index = 0;
                     for (int i = 0; i < howmany; i++)
                     {
@@ -308,6 +356,55 @@ namespace Assignment1Client
                 Byte[] commandBuffer = new Byte[512];
                 commandBuffer = Encoding.Default.GetBytes(deleteFileCommand);
                 clientSocket.Send(commandBuffer);
+                logs.AppendText("Deletion is started! \n");
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
+
+        private void Button_download_Click(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                DialogResult result = fbd.ShowDialog();
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    string[] files = Directory.GetFiles(fbd.SelectedPath);
+                    logs.AppendText("Selected path: " + fbd.SelectedPath + "\n");
+                    downloadFolder = fbd.SelectedPath;
+                }
+                else
+                {
+                    downloadFolder = "";
+                }
+            }
+            if (downloadFolder == "" || downloadFolder.Length == 0)
+            {
+                logs.AppendText("You need to specify valid path!\n");
+                return;
+            }
+
+
+            try
+            {
+                string inputFilename = textBox_filename.Text;
+                string downloadFileCommand = "!df!" + inputFilename;
+
+                Byte[] commandBuffer = new Byte[512];
+                commandBuffer = Encoding.Default.GetBytes(downloadFileCommand);
+                clientSocket.Send(commandBuffer);
+                logs.AppendText("Download started ...\n");
             }
             catch (Exception error)
             {

@@ -363,6 +363,59 @@ namespace Assignment1Server
             }
         }
 
+        private bool downloadFile(string filename, string clientName, out bool exist, Socket thisSocket)
+        {
+            try
+            {
+                int fileCountNumber = filenameExists(clientName, filename);
+                string tempFilename = "";
+
+                if (fileCountNumber == -1)
+                {
+                    exist = false;
+                    return false;
+                }
+                string tmpFilename = clientName + "-" + filename + ".txt";
+                string tmpFilePath = Path.Combine(predeterminedPath, tmpFilename);
+
+                using (StreamReader reader = new StreamReader(new FileStream(tmpFilePath, FileMode.Open), new UTF8Encoding()))
+                {
+                    string message = "!df!" + reader.ReadToEnd() + "!end!";
+                    int length_message = message.Length;
+                    int bufferSize = 1000000;
+                    int howmany = (length_message / bufferSize) + 1;
+                    logs.AppendText("how many is " + howmany + "\n");
+                    int cur_index = 0;
+                    for (int i = 0; i < howmany; i++)
+                    {
+                        Byte[] buffer = new Byte[bufferSize];
+                        if (cur_index + bufferSize < length_message)
+                        {
+                            buffer = Encoding.Default.GetBytes(message.Substring(cur_index, bufferSize));
+                        }
+                        else
+                        {
+                            string last_message = message.Substring(cur_index, length_message - cur_index);
+                            buffer = Encoding.Default.GetBytes(last_message);
+                        }
+                        cur_index = cur_index + bufferSize;
+                        thisSocket.Send(buffer);
+                    }
+                    logs.AppendText("You sent a file called " + filename + ".txt\n");
+                }
+
+
+                exist = true;
+                return true;
+            }
+            catch (Exception err)
+            {
+                logs.AppendText("Error in deleting file " + err.ToString() + "\n");
+                exist = true;
+                return false;
+            }
+        }
+
         private void Receive(Socket thisClient)
         {
             bool connected = true;
@@ -432,6 +485,7 @@ namespace Assignment1Server
                             string fileList = getFileList(clientName);
                             thisClient.Send(Encoding.Default.GetBytes(fileList));
                         }
+                        // create copy of the file
                         else if (incomingMessage.StartsWith("!cc!"))
                         {
                             string clientName = clientNames[ioc];
@@ -465,6 +519,7 @@ namespace Assignment1Server
                             }
                             thisClient.Send(Encoding.Default.GetBytes(responseMessage));
                         }
+                        // delete a file
                         else if (incomingMessage.StartsWith("!del!"))
                         {
                             string clientName = clientNames[ioc],
@@ -495,6 +550,36 @@ namespace Assignment1Server
                                 logs.AppendText(responseMessage.Substring(5, responseMessage.Length - 5) + "\n");
                             }
                             thisClient.Send(Encoding.Default.GetBytes(responseMessage));
+                        }
+                        else if (incomingMessage.StartsWith("!df!"))
+                        {
+                            string clientName = clientNames[ioc],
+                                    responseMessage = "!df!",
+                                    filename = incomingMessage.Substring(4, incomingMessage.Length - 4);
+
+                            // now, filename does not include any extension
+                            if (filename.EndsWith(".txt"))
+                            {
+                                filename = filename.Substring(0, filename.Length - 4);
+                            }
+
+                            bool fileExist = true;
+                            bool isDownloaded = downloadFile(filename, clientName, out fileExist, thisClient);
+                            if (!fileExist)
+                            {
+                                responseMessage += filename + ".txt is not found for " + clientName;
+                                logs.AppendText(responseMessage + "\n");
+                            }
+                            else if (isDownloaded)
+                            {
+                                responseMessage += filename + ".txt is downloaded for user " + clientName;
+                                logs.AppendText(responseMessage + "\n");
+                            }
+                            else
+                            {
+                                responseMessage += filename + ".txt couldn't downloaded for user " + clientName;
+                                logs.AppendText(responseMessage + "\n");
+                            }
                         }
                         else if (!incomingMessage.StartsWith("\0"))
                         {
