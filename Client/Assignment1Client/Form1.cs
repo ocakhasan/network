@@ -46,7 +46,6 @@ namespace Assignment1Client
                     button_disconnect.Enabled = true;
                     button_send.Enabled = true;
                     enableUserInputFields(true);
-                    //button_list_files.Visible = true;
                     connected = true;
 
                     Byte[] namebuffer = new Byte[64];
@@ -68,6 +67,7 @@ namespace Assignment1Client
             }
         }
 
+        // enableUserInputFields change the visibility of the input fields.
         private void enableUserInputFields(bool option)
         {
             button_list_files.Visible = option;
@@ -107,16 +107,24 @@ namespace Assignment1Client
                         button_send.Enabled = false;
                         button_disconnect.Enabled = false;
                         enableUserInputFields(false);
-                        //button_list_files.Visible = false;
                         connected = false;
                     }
+                    // !resp! is used for listing command
                     else if (incomingMessage.StartsWith("!resp!"))
                     {
-                        if (incomingMessage.Contains("!resp!"))
-                        {
-                            incomingMessage = incomingMessage.Substring(6, incomingMessage.Length - 6);
-                            displayFileList(incomingMessage);
-                        }
+                        incomingMessage = incomingMessage.Substring(6, incomingMessage.Length - 6);
+                        displayFileList(incomingMessage);
+                    }
+                    // !cc! is used for creating copy 
+                    else if (incomingMessage.StartsWith("!cc!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(4, incomingMessage.Length - 4);
+                        logs.AppendText(incomingMessage + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!del!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
+                        logs.AppendText(incomingMessage + "\n");
                     }
                 }
                 catch
@@ -127,16 +135,15 @@ namespace Assignment1Client
                         button_connect.Enabled = true;
                         button_send.Enabled = false;
                         enableUserInputFields(false);
-                        //button_list_files.Visible = false;
                     }
 
                     clientSocket.Close();
                     connected = false;
                 }
-
             }
         }
 
+        // displayFileList displays files in the db for the given user. 
         private void displayFileList(string files)
         {
             string[] fileListInfoArray = files.Split('~'), fileRecords;
@@ -178,7 +185,6 @@ namespace Assignment1Client
             string result = fullpath.Substring(last_index + 1);
             return result.Substring(0, result.IndexOf('.'));
         }
-
 
         private void button_send_Click_1(object sender, EventArgs e)
         {
@@ -274,8 +280,33 @@ namespace Assignment1Client
             string createCopyCommand = "!cc!" + inputFilename;
             try
             {
-                Byte[] commandBuffer = new Byte[64];
+                Byte[] commandBuffer = new Byte[512];
                 commandBuffer = Encoding.Default.GetBytes(createCopyCommand);
+                clientSocket.Send(commandBuffer);
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
+
+        private void Button_delete_Click(object sender, EventArgs e)
+        {
+            string inputFilename = textBox_filename.Text;
+            string deleteFileCommand = "!del!" + inputFilename;
+            try
+            {
+                Byte[] commandBuffer = new Byte[512];
+                commandBuffer = Encoding.Default.GetBytes(deleteFileCommand);
                 clientSocket.Send(commandBuffer);
             }
             catch (Exception error)

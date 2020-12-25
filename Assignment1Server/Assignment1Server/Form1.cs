@@ -125,7 +125,6 @@ namespace Assignment1Server
             return -1;
         }
 
-
         private void Accept()
         {
             while (listening)
@@ -185,7 +184,8 @@ namespace Assignment1Server
             return "";
         }
 
-        private bool createFileCopy(string filename, string clientName)
+        // createFileCopy creates a copy of the given file.
+        private bool createFileCopy(string filename, string clientName, out bool exist)
         {
             try
             {
@@ -198,7 +198,8 @@ namespace Assignment1Server
                 int fileCountNumber = filenameExists(clientName, filename);
                 if (fileCountNumber == -1)
                 {
-                    logs.AppendText(filename + " couldn't found for the user " + clientName);
+                    logs.AppendText(filename + " couldn't found for the user " + clientName + "\n");
+                    exist = false;
                     return false;
                 }
 
@@ -243,11 +244,13 @@ namespace Assignment1Server
                     sw.WriteLine(to_send); // Write text to .txt file
                 }
 
+                exist = true;
                 return true;
             }
             catch (Exception err)
             {
                 logs.AppendText("Error in creating file copy " + err.ToString() + "\n");
+                exist = true;
                 return false;
             }
         }
@@ -301,6 +304,65 @@ namespace Assignment1Server
             return false;
         }
 
+        // TODO: add sending acknowledgment to the client.
+        private bool deleteFile(string filename, string clientName, out bool exist)
+        {
+            try
+            {
+                int fileCountNumber = filenameExists(clientName, filename);
+                string tempFilename = "";
+
+                if (fileCountNumber - 1 == 0)
+                {
+                    tempFilename = clientName + "-" + filename + ".txt";
+                }
+                else if (fileCountNumber - 1 < 10)
+                {
+                    tempFilename = clientName + "-" + filename + "0" + (fileCountNumber - 1).ToString() + ".txt";
+                }
+                else if (fileCountNumber - 1 >= 10)
+                {
+                    tempFilename = clientName + "-" + filename + (fileCountNumber - 1).ToString() + ".txt";
+                }
+
+                string filePath = Path.Combine(predeterminedPath, tempFilename);
+
+                if (fileCountNumber == -1 || !File.Exists(filePath))
+                {
+                    exist = false;
+                    return false;
+                }
+
+                string line = "";
+                List<string> fileLinesList = File.ReadAllLines(fullPathDb).ToList();
+                int counter = 0;
+                using (StreamReader reader = new StreamReader(fullPathDb))
+                {
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        string[] words = line.Split(' ');
+                        if (words[1] == filename && words[0] == clientName && words[3] == tempFilename)
+                        {
+                            break;
+                        }
+                        counter++;
+                    }
+                }
+                fileLinesList.RemoveAt(counter);
+                File.WriteAllLines(fullPathDb, fileLinesList);
+
+                File.Delete(filePath);
+                exist = true;
+                return true;
+            }
+            catch (Exception err)
+            {
+                logs.AppendText("Error in deleting file " + err.ToString() + "\n");
+                exist = true;
+                return false;
+            }
+        }
+
         private void Receive(Socket thisClient)
         {
             bool connected = true;
@@ -310,7 +372,8 @@ namespace Assignment1Server
             int ioc = 0;
             while (connected && !terminating)
             {
-                try   //This will be the implementation of file acceptance and writing to the system
+                // This will be the implementation of file acceptance and writing to the system
+                try
                 {
                     if (!firstMessage)
                     {
@@ -344,7 +407,6 @@ namespace Assignment1Server
                             acceptanceBuffer = Encoding.Default.GetBytes("Yes");
                             thisClient.Send(acceptanceBuffer);
                         }
-
                     }
                     else
                     {
@@ -356,6 +418,7 @@ namespace Assignment1Server
                         filenameExtracted = false;
 
                         string incomingMessage = Encoding.Default.GetString(buffer);
+                        // clear the empty bytes of incomingMessage
                         if (incomingMessage.EndsWith("\0"))
                         {
                             incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
@@ -373,16 +436,65 @@ namespace Assignment1Server
                         {
                             string clientName = clientNames[ioc];
                             string filename = incomingMessage.Substring(4, incomingMessage.Length - 4);
-                            bool doesCopied = createFileCopy(filename, clientName);
-                            if (doesCopied)
+
+                            bool fileExistsForUser = true;
+                            bool doesCopied = createFileCopy(filename, clientName, out fileExistsForUser);
+                            string responseMessage = "!cc!";
+
+                            // if file ends with .txt, adding .txt to the end of the filename
+                            // causes duplicate .txt extension error.
+                            if (filename.EndsWith(".txt"))
                             {
-                                logs.AppendText(filename + " is copied for user " + clientName + "\n");
+                                filename = filename.Substring(0, filename.Length - 4);
+                            }
+
+                            if (!fileExistsForUser)
+                            {
+                                responseMessage += filename + ".txt is not found for " + clientName;
+                                logs.AppendText(responseMessage + "\n");
+                            }
+                            else if (doesCopied)
+                            {
+                                responseMessage += filename + ".txt is copied for user " + clientName;
+                                logs.AppendText(responseMessage + "\n");
                             }
                             else
                             {
-                                logs.AppendText(filename + " couldn't copied for user " + clientName + "\n");
+                                responseMessage += filename + ".txt couldn't copied for user " + clientName;
+                                logs.AppendText(responseMessage + "\n");
+                            }
+                            thisClient.Send(Encoding.Default.GetBytes(responseMessage));
+                        }
+                        else if (incomingMessage.StartsWith("!del!"))
+                        {
+                            string clientName = clientNames[ioc],
+                                responseMessage = "!del!",
+                                filename = incomingMessage.Substring(5, incomingMessage.Length - 5);
+
+                            // now, filename does not include any extension
+                            if (filename.EndsWith(".txt"))
+                            {
+                                filename = filename.Substring(0, filename.Length - 4);
                             }
 
+                            bool fileExist = true;
+                            bool doesDeleted = deleteFile(filename, clientName, out fileExist);
+                            if (!fileExist)
+                            {
+                                responseMessage += filename + ".txt is not found for " + clientName;
+                                logs.AppendText(responseMessage.Substring(5, responseMessage.Length - 5) + "\n");
+                            }
+                            else if (doesDeleted)
+                            {
+                                responseMessage += filename + ".txt is deleted for user " + clientName;
+                                logs.AppendText(responseMessage.Substring(5, responseMessage.Length - 5) + "\n");
+                            }
+                            else
+                            {
+                                responseMessage += filename + ".txt couldn't deleted for user " + clientName;
+                                logs.AppendText(responseMessage.Substring(5, responseMessage.Length - 5) + "\n");
+                            }
+                            thisClient.Send(Encoding.Default.GetBytes(responseMessage));
                         }
                         else if (!incomingMessage.StartsWith("\0"))
                         {
@@ -438,7 +550,6 @@ namespace Assignment1Server
                             // if file exist before.
                             if (fileCountNumber != -1)
                             {
-                                //filename_to_write = clientNames[ioc] + "-" + filename + fileCountNumber.ToString() +  ".txt";            
                                 if (fileCountNumber < 10)
                                 {
                                     filename_to_write = clientNames[ioc] + "-" + filename + "0" + fileCountNumber.ToString() + ".txt";

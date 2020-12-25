@@ -185,6 +185,7 @@
             this.button_delete.Text = "DELETE";
             this.button_delete.UseVisualStyleBackColor = true;
             this.button_delete.Visible = false;
+            this.button_delete.Click += new System.EventHandler(this.Button_delete_Click);
             // 
             // button_download
             // 
