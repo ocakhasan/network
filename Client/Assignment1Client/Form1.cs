@@ -19,6 +19,7 @@ namespace Assignment1Client
         bool connected = false;
         Socket clientSocket;
         string name;
+        string downloadFolder = "";
 
 
         public Form1()
@@ -45,7 +46,7 @@ namespace Assignment1Client
                     button_connect.Enabled = false;
                     button_disconnect.Enabled = true;
                     button_send.Enabled = true;
-                    button_list_files.Visible = true;
+                    enableUserInputFields(true);
                     connected = true;
 
                     Byte[] namebuffer = new Byte[64];
@@ -65,6 +66,19 @@ namespace Assignment1Client
             {
                 logs.AppendText("Check the port\n");
             }
+        }
+
+        // enableUserInputFields change the visibility of the input fields.
+        private void enableUserInputFields(bool option)
+        {
+            button_list_files.Visible = option;
+            label_filename.Visible = option;
+            textBox_filename.Visible = option;
+            button_delete.Visible = option;
+            button_create_copy.Visible = option;
+            button_download.Visible = option;
+            button_make_public.Visible = option;
+            button_get_public.Visible = option;
         }
 
         private void Receive()
@@ -95,15 +109,101 @@ namespace Assignment1Client
                         button_connect.Enabled = true;
                         button_send.Enabled = false;
                         button_disconnect.Enabled = false;
-                        button_list_files.Visible = false;
+                        enableUserInputFields(false);
                         connected = false;
                     }
+                    // !resp! is used for listing command
                     else if (incomingMessage.StartsWith("!resp!"))
                     {
-                        if (incomingMessage.Contains("!resp!"))
+                        incomingMessage = incomingMessage.Substring(6, incomingMessage.Length - 6);
+                        displayFileList(incomingMessage);
+                    }
+                    // !cc! is used for creating copy 
+                    else if (incomingMessage.StartsWith("!cc!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(4, incomingMessage.Length - 4);
+                        logs.AppendText(incomingMessage + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!del!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
+                        logs.AppendText(incomingMessage + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!err!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
+                        logs.AppendText(incomingMessage + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!df!"))
+                    {
+                        string filename = textBox_filename.Text;
+                        if (!filename.EndsWith(".txt"))
                         {
-                            incomingMessage = incomingMessage.Substring(6, incomingMessage.Length - 6);
-                            displayFileList(incomingMessage);
+                            filename += ".txt";
+                        }
+                        int counter = 1;
+                        incomingMessage = incomingMessage.Substring(4, incomingMessage.Length - 4);
+                        int incomingSize = incomingMessage.Length;
+                        if (incomingMessage.Length == bufferSize - 4)
+                        {
+                            while (true)
+                            {
+                                Byte[] buffer2 = new Byte[bufferSize];
+                                clientSocket.Receive(buffer2);
+                                string partialdata = Encoding.Default.GetString(buffer2);
+                                if (partialdata.IndexOf("\0") >= 0)
+                                {
+                                    partialdata = partialdata.Substring(0, partialdata.IndexOf("\0"));
+                                }
+                                logs.AppendText("Counter is " + counter + "\n");
+                                counter++;
+
+                                if (partialdata.EndsWith("!end!"))
+                                {
+                                    partialdata = partialdata.Substring(0, partialdata.Length - 5);
+                                    incomingMessage += partialdata;
+                                    break;
+                                }
+                                if (partialdata.Length > 0)
+                                {
+                                    incomingMessage += partialdata;
+                                }
+                            }
+                        }
+                        string downloadedFilePath = Path.Combine(downloadFolder, filename);
+                        if (incomingMessage.EndsWith("!end!"))
+                        {
+                            incomingMessage = incomingMessage.Substring(0, incomingMessage.Length - 5);
+                        }
+                        logs.AppendText(filename + " is saving.\n");
+                        using (StreamWriter sw = File.CreateText(downloadedFilePath))
+                        {
+                            sw.WriteLine(incomingMessage);
+                        }
+                        logs.AppendText(filename + " is downloaded into " + downloadFolder + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!mp!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(4, incomingMessage.Length - 4);
+                        logs.AppendText(incomingMessage + "\n");
+                    }
+                    else if (incomingMessage.StartsWith("!pll!"))
+                    {
+                        incomingMessage = incomingMessage.Substring(5, incomingMessage.Length - 5);
+                        string[] publicFilesArr = incomingMessage.Split('~');
+                        logs.AppendText("PUBLIC FILES\n");
+                        foreach (string fileInfo in publicFilesArr)
+                        {
+                            string[] eachInfo = fileInfo.Split(' ');
+                            if (eachInfo.Length > 0 && eachInfo[0].Length > 0)
+                            {
+                                logs.AppendText("--------------------\n");
+                                logs.AppendText("OWNER:" + eachInfo[0] + "\n" +
+                                    "FILENAME:" + eachInfo[1] + " \n" +
+                                    "CREATED AT: " + eachInfo[3] + " \n" +
+                                    "SIZE:" + eachInfo[2] + "\n");
+                                logs.AppendText("--------------------\n");
+                            }
                         }
                     }
                 }
@@ -114,16 +214,16 @@ namespace Assignment1Client
                         logs.AppendText("The server has disconnected\n");
                         button_connect.Enabled = true;
                         button_send.Enabled = false;
-                        button_list_files.Visible = false;
+                        enableUserInputFields(false);
                     }
 
                     clientSocket.Close();
                     connected = false;
                 }
-
             }
         }
 
+        // displayFileList displays files in the db for the given user. 
         private void displayFileList(string files)
         {
             string[] fileListInfoArray = files.Split('~'), fileRecords;
@@ -166,7 +266,6 @@ namespace Assignment1Client
             return result.Substring(0, result.IndexOf('.'));
         }
 
-
         private void button_send_Click_1(object sender, EventArgs e)
         {
             OpenFileDialog dialog = new OpenFileDialog();
@@ -184,13 +283,12 @@ namespace Assignment1Client
                     int length_message = message.Length;
 
                     logs.AppendText("Dosya boyutu " + length_message + "\n");
-                    int num = 500 * 1024;
                     int bufferSize = 1000000;
 
 
                     int howmany = (length_message / bufferSize) + 1;
-
                     logs.AppendText("how many is " + howmany + "\n");
+
                     int cur_index = 0;
                     for (int i = 0; i < howmany; i++)
                     {
@@ -223,7 +321,8 @@ namespace Assignment1Client
             button_send.Enabled = false;
             button_disconnect.Enabled = false;
             button_connect.Enabled = true;
-            button_list_files.Visible = false;
+            enableUserInputFields(false);
+            //button_list_files.Visible = false;
         }
 
         private void Button_list_files_Click(object sender, EventArgs e)
@@ -233,7 +332,6 @@ namespace Assignment1Client
             {
                 Byte[] commandBuffer = new Byte[64];
                 commandBuffer = Encoding.Default.GetBytes(listingCommand);
-
                 clientSocket.Send(commandBuffer);
             }
             catch (Exception error)
@@ -244,7 +342,7 @@ namespace Assignment1Client
                     logs.AppendText("The server has disconnected\n");
                     button_connect.Enabled = true;
                     button_send.Enabled = false;
-                    button_list_files.Visible = false;
+                    enableUserInputFields(false);
                 }
 
                 clientSocket.Close();
@@ -252,5 +350,157 @@ namespace Assignment1Client
             }
         }
 
+        private void Button_create_copy_Click(object sender, EventArgs e)
+        {
+
+            string inputFilename = textBox_filename.Text;
+            string createCopyCommand = "!cc!" + inputFilename;
+            try
+            {
+                Byte[] commandBuffer = new Byte[512];
+                commandBuffer = Encoding.Default.GetBytes(createCopyCommand);
+                clientSocket.Send(commandBuffer);
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
+
+        private void Button_delete_Click(object sender, EventArgs e)
+        {
+            string inputFilename = textBox_filename.Text;
+            string deleteFileCommand = "!del!" + inputFilename;
+            try
+            {
+                Byte[] commandBuffer = new Byte[512];
+                commandBuffer = Encoding.Default.GetBytes(deleteFileCommand);
+                clientSocket.Send(commandBuffer);
+                logs.AppendText("Deletion is started! \n");
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
+
+        private void Button_download_Click(object sender, EventArgs e)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                DialogResult result = fbd.ShowDialog();
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                {
+                    string[] files = Directory.GetFiles(fbd.SelectedPath);
+                    logs.AppendText("Selected path: " + fbd.SelectedPath + "\n");
+                    downloadFolder = fbd.SelectedPath;
+                }
+                else
+                {
+                    downloadFolder = "";
+                }
+            }
+            if (downloadFolder == "" || downloadFolder.Length == 0)
+            {
+                logs.AppendText("You need to specify valid path!\n");
+                return;
+            }
+
+
+            try
+            {
+                string inputFilename = textBox_filename.Text;
+                string downloadFileCommand = "!df!" + inputFilename;
+
+                Byte[] commandBuffer = new Byte[512];
+                commandBuffer = Encoding.Default.GetBytes(downloadFileCommand);
+                clientSocket.Send(commandBuffer);
+                logs.AppendText("Download started ...\n");
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            string inputFilename = textBox_filename.Text;
+            string makePublicCommand = "!mp!" + inputFilename;
+
+            try
+            {
+
+                Byte[] commandBuffer = new Byte[512];
+                commandBuffer = Encoding.Default.GetBytes(makePublicCommand);
+                clientSocket.Send(commandBuffer);
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+
+        }
+
+        private void Button_get_public_Click(object sender, EventArgs e)
+        {
+            string filename = textBox_filename.Text;
+            string listingCommand = "!pll!" + filename;
+            try
+            {
+                Byte[] commandBuffer = new Byte[64];
+                commandBuffer = Encoding.Default.GetBytes(listingCommand);
+                clientSocket.Send(commandBuffer);
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("The process failed: {0}", error.ToString());
+                if (!terminating)
+                {
+                    logs.AppendText("The server has disconnected\n");
+                    button_connect.Enabled = true;
+                    button_send.Enabled = false;
+                    enableUserInputFields(false);
+                }
+                clientSocket.Close();
+                connected = false;
+            }
+        }
     }
 }

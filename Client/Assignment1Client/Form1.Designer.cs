@@ -40,10 +40,12 @@
             this.button_disconnect = new System.Windows.Forms.Button();
             this.button_list_files = new System.Windows.Forms.Button();
             this.textBox_filename = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
+            this.label_filename = new System.Windows.Forms.Label();
             this.button_create_copy = new System.Windows.Forms.Button();
             this.button_delete = new System.Windows.Forms.Button();
             this.button_download = new System.Windows.Forms.Button();
+            this.button_make_public = new System.Windows.Forms.Button();
+            this.button_get_public = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -155,15 +157,15 @@
             this.textBox_filename.Text = "Hasan";
             this.textBox_filename.Visible = false;
             // 
-            // label4
+            // label_filename
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(52, 334);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(60, 13);
-            this.label4.TabIndex = 12;
-            this.label4.Text = "FILENAME";
-            this.label4.Visible = false;
+            this.label_filename.AutoSize = true;
+            this.label_filename.Location = new System.Drawing.Point(52, 334);
+            this.label_filename.Name = "label_filename";
+            this.label_filename.Size = new System.Drawing.Size(60, 13);
+            this.label_filename.TabIndex = 12;
+            this.label_filename.Text = "FILENAME";
+            this.label_filename.Visible = false;
             // 
             // button_create_copy
             // 
@@ -174,6 +176,7 @@
             this.button_create_copy.Text = "CREATE COPY";
             this.button_create_copy.UseVisualStyleBackColor = true;
             this.button_create_copy.Visible = false;
+            this.button_create_copy.Click += new System.EventHandler(this.Button_create_copy_Click);
             // 
             // button_delete
             // 
@@ -184,26 +187,52 @@
             this.button_delete.Text = "DELETE";
             this.button_delete.UseVisualStyleBackColor = true;
             this.button_delete.Visible = false;
+            this.button_delete.Click += new System.EventHandler(this.Button_delete_Click);
             // 
             // button_download
             // 
             this.button_download.Location = new System.Drawing.Point(216, 357);
             this.button_download.Name = "button_download";
-            this.button_download.Size = new System.Drawing.Size(80, 23);
+            this.button_download.Size = new System.Drawing.Size(92, 23);
             this.button_download.TabIndex = 17;
             this.button_download.Text = "DOWNLOAD";
             this.button_download.UseVisualStyleBackColor = true;
             this.button_download.Visible = false;
+            this.button_download.Click += new System.EventHandler(this.Button_download_Click);
+            // 
+            // button_make_public
+            // 
+            this.button_make_public.Location = new System.Drawing.Point(216, 331);
+            this.button_make_public.Name = "button_make_public";
+            this.button_make_public.Size = new System.Drawing.Size(92, 23);
+            this.button_make_public.TabIndex = 18;
+            this.button_make_public.Text = "MAKE PUBLIC";
+            this.button_make_public.UseVisualStyleBackColor = true;
+            this.button_make_public.Visible = false;
+            this.button_make_public.Click += new System.EventHandler(this.Button1_Click);
+            // 
+            // button_get_public
+            // 
+            this.button_get_public.Location = new System.Drawing.Point(116, 386);
+            this.button_get_public.Name = "button_get_public";
+            this.button_get_public.Size = new System.Drawing.Size(112, 23);
+            this.button_get_public.TabIndex = 19;
+            this.button_get_public.Text = "GET PUBLIC FILES";
+            this.button_get_public.UseVisualStyleBackColor = true;
+            this.button_get_public.Visible = false;
+            this.button_get_public.Click += new System.EventHandler(this.Button_get_public_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(783, 413);
+            this.Controls.Add(this.button_get_public);
+            this.Controls.Add(this.button_make_public);
             this.Controls.Add(this.button_download);
             this.Controls.Add(this.button_delete);
             this.Controls.Add(this.button_create_copy);
-            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label_filename);
             this.Controls.Add(this.textBox_filename);
             this.Controls.Add(this.button_list_files);
             this.Controls.Add(this.button_disconnect);
@@ -237,10 +266,12 @@
         private System.Windows.Forms.Button button_disconnect;
         private System.Windows.Forms.Button button_list_files;
         private System.Windows.Forms.TextBox textBox_filename;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label_filename;
         private System.Windows.Forms.Button button_create_copy;
         private System.Windows.Forms.Button button_delete;
         private System.Windows.Forms.Button button_download;
+        private System.Windows.Forms.Button button_make_public;
+        private System.Windows.Forms.Button button_get_public;
     }
 }
 
