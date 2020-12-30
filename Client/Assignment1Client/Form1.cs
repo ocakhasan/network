@@ -424,7 +424,6 @@ namespace Assignment1Client
                 return;
             }
 
-
             try
             {
                 string inputFilename = textBox_filename.Text;

@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Assignment1Server
@@ -272,8 +268,7 @@ namespace Assignment1Server
                     filename = filename.Substring(0, filename.Length - 4);
                 }
 
-                bool fullFilenameInput = false;
-                int fileCountNumber = filenameExists(clientName, filename, out fullFilenameInput);
+                int fileCountNumber = filenameExists(clientName, filename, out bool fullFilenameInput);
                 if (fileCountNumber == -1)
                 {
                     logs.AppendText(filename + " couldn't found for the user " + clientName + "\n");
@@ -309,7 +304,13 @@ namespace Assignment1Server
                     filename_to_write = clientName + "-" + filename + fileCountNumber.ToString() + ".txt";
                 }
 
-                string sourceFilename = clientName + "-" + filename + ".txt";
+                string sourceFilename = getFieldFromDB(3, filename, clientName);
+                if(sourceFilename == "")
+                {
+                    logs.AppendText("Couldn't get any file from DB to create copy.\n");
+                    exist = true;
+                    return false;
+                }
                 string sourceFileDest = Path.Combine(predeterminedPath, sourceFilename);
                 string copiedFileDest = Path.Combine(predeterminedPath, filename_to_write);
 
@@ -399,44 +400,70 @@ namespace Assignment1Server
             return false;
         }
 
-        // TODO: add sending acknowledgment to the client.
         private bool deleteFile(string filename, string clientName, out bool exist)
         {
             try
             {
-                int fileCountNumber = filenameExists(clientName, filename, out bool temp);
-                string tempFilename = "";
+                // now, filename does not contain any file extension
+                if (filename.EndsWith(".txt"))
+                {
+                    filename = filename.Substring(0, filename.Length - 4);
+                }
 
-                if (fileCountNumber - 1 == 0)
+                int fileCountNumber = filenameExists(clientName, filename, out bool fullFilenameInput);
+                if (fileCountNumber == -1)
                 {
-                    tempFilename = clientName + "-" + filename + ".txt";
+                    logs.AppendText(filename + " couldn't found for the user " + clientName + "\n");
+                    exist = false;
+                    return false;
                 }
-                else if (fileCountNumber - 1 < 10)
+
+                string parsedFilename = "";
+                // if fullFilenameInput is true, we have <client_name>-<filenameCount> file input.
+                // therefore, we need to parse it to obtain real file name.
+                if (fullFilenameInput)
                 {
-                    tempFilename = clientName + "-" + filename + "0" + (fileCountNumber - 1).ToString() + ".txt";
+                    // - Until the dash, we have client name. We are going to extract client name from the input 
+                    // - indexOfFileCount indicates the starting index of the file count within the filename input given as a parameter.
+                    int indexOfDash = filename.IndexOf('-');
+
+                    // Now we obtained a filename without client name.
+                    parsedFilename = filename.Substring(indexOfDash + 1, filename.Length - 1 - indexOfDash);
+
+                    // However, we may have a file count in the end of the filename.
+                    // Iterate through the filename to find the first occurrences of the count.
+                    // Increment the value of the indexOfFileCount based on iteration
+                    parsedFilename = parseFilename(parsedFilename);
                 }
-                else if (fileCountNumber - 1 >= 10)
+
+                string tempFilename = "";
+                if(fullFilenameInput)
                 {
-                    tempFilename = clientName + "-" + filename + (fileCountNumber - 1).ToString() + ".txt";
+                    tempFilename = filename + ".txt";
+                }
+                else
+                {
+                    tempFilename = getFieldFromDB(3, filename, clientName);
                 }
 
                 string filePath = Path.Combine(predeterminedPath, tempFilename);
-
                 if (fileCountNumber == -1 || !File.Exists(filePath))
                 {
                     exist = false;
                     return false;
                 }
 
-                string line = "";
                 List<string> fileLinesList = File.ReadAllLines(fullPathDb).ToList();
+                string line = "";
                 int counter = 0;
                 using (StreamReader reader = new StreamReader(fullPathDb))
                 {
                     while ((line = reader.ReadLine()) != null)
                     {
                         string[] words = line.Split(' ');
-                        if (words[1] == filename && words[0] == clientName && words[3] == tempFilename)
+                        if ((fullFilenameInput && words[3] == filename + ".txt")
+                            || (!fullFilenameInput && words[1] == filename)
+                            && (words[0] == clientName))
                         {
                             break;
                         }
