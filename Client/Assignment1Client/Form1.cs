@@ -71,6 +71,7 @@ namespace Assignment1Client
         // enableUserInputFields change the visibility of the input fields.
         private void enableUserInputFields(bool option)
         {
+            button_disconnect.Enabled = option;
             button_list_files.Visible = option;
             label_filename.Visible = option;
             textBox_filename.Visible = option;
@@ -105,12 +106,12 @@ namespace Assignment1Client
 
                     else if (incomingMessage == "No")               //No means we do not connected. There exists a name.
                     {
-                        logs.AppendText("Not connected to the server. There exists a client with same name. Enter another name \n");
                         button_connect.Enabled = true;
                         button_send.Enabled = false;
                         button_disconnect.Enabled = false;
                         enableUserInputFields(false);
                         connected = false;
+                        logs.AppendText("Not connected to the server. There exists a client with same name. Enter another name \n");
                     }
                     // !resp! is used for listing command
                     else if (incomingMessage.StartsWith("!resp!"))
@@ -280,14 +281,10 @@ namespace Assignment1Client
                     string filename = getFileNameFromPath(path);        //extract filename from path
                     string message = reader.ReadToEnd();
                     message = "dosya" + filename + "." + message + "!end!";                 //add the file name to file content. Will be parsed by the server.
+
                     int length_message = message.Length;
-
-                    logs.AppendText("Dosya boyutu " + length_message + "\n");
                     int bufferSize = 1000000;
-
-
                     int howmany = (length_message / bufferSize) + 1;
-                    logs.AppendText("how many is " + howmany + "\n");
 
                     int cur_index = 0;
                     for (int i = 0; i < howmany; i++)
@@ -322,7 +319,6 @@ namespace Assignment1Client
             button_disconnect.Enabled = false;
             button_connect.Enabled = true;
             enableUserInputFields(false);
-            //button_list_files.Visible = false;
         }
 
         private void Button_list_files_Click(object sender, EventArgs e)
@@ -423,7 +419,6 @@ namespace Assignment1Client
                 logs.AppendText("You need to specify valid path!\n");
                 return;
             }
-
 
             try
             {

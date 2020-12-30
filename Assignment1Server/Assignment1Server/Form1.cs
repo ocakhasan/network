@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Assignment1Server
@@ -17,12 +13,9 @@ namespace Assignment1Server
     public partial class Form1 : Form
     {
         String predeterminedPath = @"C:\Users\ASUS\Desktop\foldertowrite";
-
-        List<String> names = new List<String>();
         Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         List<Socket> clientSockets = new List<Socket>();
         List<string> clientNames = new List<string>();
-        List<int> clientFileCounts = new List<int>();
 
         bool terminating = false;
         bool listening = false;
@@ -30,8 +23,6 @@ namespace Assignment1Server
         static string fullPathDb = Path.Combine(cwd, "information.txt");
         int currentUserIdx = 0;
         Dictionary<Socket, int> clientIndexes = new Dictionary<Socket, int>();
-
-
 
         public Form1()
         {
@@ -91,9 +82,32 @@ namespace Assignment1Server
             return false;
         }
 
-        private int filenameExists(string client_name, string filename)
+        private string parseFilename(string filename)
+        {
+            int indexOfFileCount = -1;
+            int filenameLength = filename.Length;
+            for (int i = filenameLength - 1; i >= 0; i--)
+            {
+                // if the char of the filename can be an integer, it reflects count
+                if (Int32.TryParse(filename[i].ToString(), out int temp))
+                {
+                    indexOfFileCount = filenameLength - i;
+                }
+                else { break; }
+            }
+            // If there exists any file count in the filename, extract this part from the filename.
+            if (indexOfFileCount != -1)
+            {
+                filename = filename.Substring(0, filename.Length - indexOfFileCount);
+            }
+            return filename;
+        }
+
+        private int filenameExists(string client_name, string filename, out bool fullFilenameExists)
         {
 
+            // fullFilenameExists = true indicates that given file has <client_name>-<filenameWithFileCount> structure.
+            fullFilenameExists = false;
             string line;
             int count = -1;
             StreamReader file = new StreamReader(fullPathDb);
@@ -102,14 +116,29 @@ namespace Assignment1Server
                 while ((line = file.ReadLine()) != null)
                 {
                     string[] words = line.Split(' ');
-                    string[] fullFileArr = words[3].Split('-');
-                    string fileNamecount = fullFileArr[1];
-                    if (fileNamecount.EndsWith(".txt"))
+                    string fullFileName = words[3];
+                    if (fullFileName.EndsWith(".txt"))
                     {
-                        fileNamecount = fileNamecount.Substring(0, fileNamecount.Length - 4);
+                        fullFileName = fullFileName.Substring(0, fullFileName.Length - 4);
                     }
-                    if (words[0] == client_name && (words[1] == filename || fileNamecount == filename))
+                    bool recordEqualsFileInput = fullFileName == filename;
+                    // The previously found fullFilename returns count as 01. (After finding first one, it never goes inner loop which increments count)
+                    // Therefore, I check that if the current line's filename == input file name by taking substring of it
+                    if (fullFilenameExists && filename.Length <= fullFileName.Length)
                     {
+                        bool temp = parseFilename(filename) == words[0] + "-" + words[1];
+                        if (fullFileName.Substring(0, filename.Length) == filename
+                            || parseFilename(filename) == words[0] + "-" + words[1])
+                        {
+                            recordEqualsFileInput = true;
+                        }
+                    }
+                    if (words[0] == client_name && (words[1] == filename || recordEqualsFileInput))
+                    {
+                        if (fullFileName == filename)
+                        {
+                            fullFilenameExists = true;
+                        }
                         string strCount = words[2];
                         if (Int32.TryParse(strCount, out count))
                         {
@@ -164,14 +193,14 @@ namespace Assignment1Server
 
         private string getFileStatus(string filename)
         {
-            string line = "";
             StreamReader file = new StreamReader(fullPathDb);
             try
             {
+                string line;
                 while ((line = file.ReadLine()) != null)
                 {
                     string[] words = line.Split(' ');
-                    if (words[1] == filename && words[6] == "public")
+                    if ((words[1] == filename || words[3] == filename + ".txt") && words[6] == "public")
                     {
                         return "public";
                     }
@@ -190,7 +219,7 @@ namespace Assignment1Server
             return "";
         }
 
-        // getFieldFromDB returns a field for the specified file name.
+        // getFieldFromDB returns a field of the specified file for given clientName
         private string getFieldFromDB(int fieldIndex, string filename, string clientName = "")
         {
             string line = "";
@@ -202,14 +231,14 @@ namespace Assignment1Server
                     string[] words = line.Split(' ');
                     if (clientName.Length > 0)
                     {
-                        if (words[1] == filename && words[0] == clientName)
+                        if ((words[1] == filename) || (words[3] == filename + ".txt") && words[0] == clientName)
                         {
                             return words[fieldIndex];
                         }
                     }
                     else
                     {
-                        if (words[1] == filename)
+                        if (words[1] == filename || (words[3] == filename + ".txt"))
                         {
                             return words[fieldIndex];
                         }
@@ -239,7 +268,7 @@ namespace Assignment1Server
                     filename = filename.Substring(0, filename.Length - 4);
                 }
 
-                int fileCountNumber = filenameExists(clientName, filename);
+                int fileCountNumber = filenameExists(clientName, filename, out bool fullFilenameInput);
                 if (fileCountNumber == -1)
                 {
                     logs.AppendText(filename + " couldn't found for the user " + clientName + "\n");
@@ -247,6 +276,24 @@ namespace Assignment1Server
                     return false;
                 }
 
+                // if fullFilenameInput is true, we have <client_name>-<filenameCount> file input.
+                // therefore, we need to parse it to obtain real file name.
+                if (fullFilenameInput)
+                {
+                    // - Until the dash, we have client name. We are going to extract client name from the input 
+                    // - indexOfFileCount indicates the starting index of the file count within the filename input given as a parameter.
+                    int indexOfDash = filename.IndexOf('-');
+
+                    // Now we obtained a filename without client name.
+                    filename = filename.Substring(indexOfDash + 1, filename.Length - 1 - indexOfDash);
+
+                    // However, we may have a file count in the end of the filename.
+                    // Iterate through the filename to find the first occurrences of the count.
+                    // Increment the value of the indexOfFileCount based on iteration
+                    filename = parseFilename(filename);
+                }
+
+                // filename_to_write will be used as a filename for the copy of the actual file.
                 string filename_to_write = "";
                 if (fileCountNumber < 10)
                 {
@@ -257,15 +304,22 @@ namespace Assignment1Server
                     filename_to_write = clientName + "-" + filename + fileCountNumber.ToString() + ".txt";
                 }
 
-                string sourceFilename = clientName + "-" + filename + ".txt";
+                string sourceFilename = getFieldFromDB(3, filename, clientName);
+                if (sourceFilename == "")
+                {
+                    logs.AppendText("Couldn't get any file from DB to create copy.\n");
+                    exist = true;
+                    return false;
+                }
                 string sourceFileDest = Path.Combine(predeterminedPath, sourceFilename);
                 string copiedFileDest = Path.Combine(predeterminedPath, filename_to_write);
 
                 File.Copy(sourceFileDest, copiedFileDest, true);
 
+                // In order to create a proper record, we need file size and the status(public or priv.) of the file
                 string fileSize = getFieldFromDB(5, filename, clientName);
+                string status = getFieldFromDB(6, filename, clientName);
 
-                string status = getFileStatus(filename);
                 // create a record in the db for the copied file
                 using (StreamWriter sw = File.AppendText(fullPathDb))
                 {
@@ -276,15 +330,10 @@ namespace Assignment1Server
                     {
                         logs.AppendText("File size for the " + filename + " couldn't found in the DB.\n");
                     }
+
                     if (fileCountNumber != -1)
                     {
                         to_send = clientName + " " + filename + " " + fileCountNumber
-                            + " " + filename_to_write + " " + currDate + " " + fileSize
-                            + " " + status;
-                    }
-                    else
-                    {
-                        to_send = clientName + " " + filename + " " + "0"
                             + " " + filename_to_write + " " + currDate + " " + fileSize
                             + " " + status;
                     }
@@ -313,7 +362,7 @@ namespace Assignment1Server
                     string[] words = line.Split(' ');
                     if (words[0] == userName)
                     {
-                        string fileName = words[1];
+                        string fileName = words[3];
                         if (fileName.Length > 0)
                         {
                             resultList += fileName + " " + words[4] + " " + words[5] + "~";
@@ -351,44 +400,70 @@ namespace Assignment1Server
             return false;
         }
 
-        // TODO: add sending acknowledgment to the client.
         private bool deleteFile(string filename, string clientName, out bool exist)
         {
             try
             {
-                int fileCountNumber = filenameExists(clientName, filename);
-                string tempFilename = "";
+                // now, filename does not contain any file extension
+                if (filename.EndsWith(".txt"))
+                {
+                    filename = filename.Substring(0, filename.Length - 4);
+                }
 
-                if (fileCountNumber - 1 == 0)
+                int fileCountNumber = filenameExists(clientName, filename, out bool fullFilenameInput);
+                if (fileCountNumber == -1)
                 {
-                    tempFilename = clientName + "-" + filename + ".txt";
+                    logs.AppendText(filename + " couldn't found for the user " + clientName + "\n");
+                    exist = false;
+                    return false;
                 }
-                else if (fileCountNumber - 1 < 10)
+
+                string parsedFilename = "";
+                // if fullFilenameInput is true, we have <client_name>-<filenameCount> file input.
+                // therefore, we need to parse it to obtain real file name.
+                if (fullFilenameInput)
                 {
-                    tempFilename = clientName + "-" + filename + "0" + (fileCountNumber - 1).ToString() + ".txt";
+                    // - Until the dash, we have client name. We are going to extract client name from the input 
+                    // - indexOfFileCount indicates the starting index of the file count within the filename input given as a parameter.
+                    int indexOfDash = filename.IndexOf('-');
+
+                    // Now we obtained a filename without client name.
+                    parsedFilename = filename.Substring(indexOfDash + 1, filename.Length - 1 - indexOfDash);
+
+                    // However, we may have a file count in the end of the filename.
+                    // Iterate through the filename to find the first occurrences of the count.
+                    // Increment the value of the indexOfFileCount based on iteration
+                    parsedFilename = parseFilename(parsedFilename);
                 }
-                else if (fileCountNumber - 1 >= 10)
+
+                string tempFilename = "";
+                if (fullFilenameInput)
                 {
-                    tempFilename = clientName + "-" + filename + (fileCountNumber - 1).ToString() + ".txt";
+                    tempFilename = filename + ".txt";
+                }
+                else
+                {
+                    tempFilename = getFieldFromDB(3, filename, clientName);
                 }
 
                 string filePath = Path.Combine(predeterminedPath, tempFilename);
-
                 if (fileCountNumber == -1 || !File.Exists(filePath))
                 {
                     exist = false;
                     return false;
                 }
 
-                string line = "";
                 List<string> fileLinesList = File.ReadAllLines(fullPathDb).ToList();
+                string line = "";
                 int counter = 0;
                 using (StreamReader reader = new StreamReader(fullPathDb))
                 {
                     while ((line = reader.ReadLine()) != null)
                     {
                         string[] words = line.Split(' ');
-                        if (words[1] == filename && words[0] == clientName && words[3] == tempFilename)
+                        if ((fullFilenameInput && words[3] == filename + ".txt")
+                            || (!fullFilenameInput && words[1] == filename)
+                            && (words[0] == clientName))
                         {
                             break;
                         }
@@ -414,8 +489,7 @@ namespace Assignment1Server
         {
             try
             {
-                int fileCountNumber = filenameExists(clientName, filename);
-                string tempFilename = "", tempClient = "";
+                int fileCountNumber = filenameExists(clientName, filename, out bool temp);
 
                 string fileVisibility = getFileStatus(filename);
                 if (fileVisibility == "private")
@@ -436,7 +510,7 @@ namespace Assignment1Server
                     }
                 }
 
-                string tmpFilename = clientName + "-" + filename + ".txt";
+                string tmpFilename = getFieldFromDB(3, filename, clientName);
                 string tmpFilePath = Path.Combine(predeterminedPath, tmpFilename);
 
                 using (StreamReader reader = new StreamReader(new FileStream(tmpFilePath, FileMode.Open), new UTF8Encoding()))
@@ -445,7 +519,6 @@ namespace Assignment1Server
                     int length_message = message.Length;
                     int bufferSize = 1000000;
                     int howmany = (length_message / bufferSize) + 1;
-                    logs.AppendText("how many is " + howmany + "\n");
                     int cur_index = 0;
                     for (int i = 0; i < howmany; i++)
                     {
@@ -482,7 +555,8 @@ namespace Assignment1Server
         {
             try
             {
-                int fileCountNumber = filenameExists(clientName, filename);
+                bool temp = false;
+                int fileCountNumber = filenameExists(clientName, filename, out temp);
                 string tempFilename = "";
 
                 if (fileCountNumber == -1)
@@ -624,13 +698,13 @@ namespace Assignment1Server
                         filenameExtracted = false;
 
                         string incomingMessage = Encoding.Default.GetString(buffer);
-                        // clear the empty bytes of incomingMessage
                         if (incomingMessage.EndsWith("\0"))
                         {
                             incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
                         }
 
                         ioc = clientSockets.IndexOf(thisClient);
+
                         // List the files of the user
                         if (incomingMessage.StartsWith("!ll!"))
                         {
@@ -644,8 +718,7 @@ namespace Assignment1Server
                             string clientName = clientNames[ioc];
                             string filename = incomingMessage.Substring(4, incomingMessage.Length - 4);
 
-                            bool fileExistsForUser = true;
-                            bool doesCopied = createFileCopy(filename, clientName, out fileExistsForUser);
+                            bool doesCopied = createFileCopy(filename, clientName, out bool fileExistsForUser);
                             string responseMessage = "!cc!";
 
                             // if file ends with .txt, adding .txt to the end of the filename
@@ -658,17 +731,17 @@ namespace Assignment1Server
                             if (!fileExistsForUser)
                             {
                                 responseMessage += filename + ".txt is not found for " + clientName;
-                                logs.AppendText(responseMessage + "\n");
+                                logs.AppendText(responseMessage.Substring(4, responseMessage.Length - 4) + "\n");
                             }
                             else if (doesCopied)
                             {
                                 responseMessage += filename + ".txt is copied for user " + clientName;
-                                logs.AppendText(responseMessage + "\n");
+                                logs.AppendText(responseMessage.Substring(4, responseMessage.Length - 4) + "\n");
                             }
                             else
                             {
                                 responseMessage += filename + ".txt couldn't copied for user " + clientName;
-                                logs.AppendText(responseMessage + "\n");
+                                logs.AppendText(responseMessage.Substring(4, responseMessage.Length - 4) + "\n");
                             }
                             thisClient.Send(Encoding.Default.GetBytes(responseMessage));
                         }
@@ -685,8 +758,7 @@ namespace Assignment1Server
                                 filename = filename.Substring(0, filename.Length - 4);
                             }
 
-                            bool fileExist = true;
-                            bool doesDeleted = deleteFile(filename, clientName, out fileExist);
+                            bool doesDeleted = deleteFile(filename, clientName, out bool fileExist);
                             if (!fileExist)
                             {
                                 responseMessage += filename + ".txt is not found for " + clientName;
@@ -716,23 +788,22 @@ namespace Assignment1Server
                                 filename = filename.Substring(0, filename.Length - 4);
                             }
 
-                            bool fileExist = true;
-                            bool isDownloaded = downloadFile(filename, clientName, out fileExist, thisClient);
+                            bool isDownloaded = downloadFile(filename, clientName, out bool fileExist, thisClient);
                             if (!fileExist)
                             {
                                 responseMessage = "!err!" + filename + ".txt is not found for " + clientName;
-                                logs.AppendText(responseMessage + "\n");
+                                logs.AppendText(responseMessage.Substring(4, responseMessage.Length - 4) + "\n");
                                 thisClient.Send(Encoding.Default.GetBytes(responseMessage));
                             }
                             else if (isDownloaded)
                             {
                                 responseMessage += filename + ".txt is downloaded for user " + clientName;
-                                logs.AppendText(responseMessage + "\n");
+                                logs.AppendText(responseMessage.Substring(4, responseMessage.Length - 4) + "\n");
                             }
                             else
                             {
                                 responseMessage = "!err!" + filename + ".txt couldn't downloaded for user " + clientName;
-                                logs.AppendText(responseMessage + "\n");
+                                logs.AppendText(responseMessage.Substring(4, responseMessage.Length - 4) + "\n");
                                 thisClient.Send(Encoding.Default.GetBytes(responseMessage));
                             }
                         }
@@ -741,14 +812,13 @@ namespace Assignment1Server
                             string clientName = clientNames[ioc],
                                responseMessage = "!mp!",
                                filename = incomingMessage.Substring(4, incomingMessage.Length - 4);
-                            bool fileExist = true;
 
                             if (filename.EndsWith(".txt"))
                             {
                                 filename = filename.Substring(0, filename.Length - 4);
                             }
-                            bool isChanged = changeFileVisibility(filename, clientName, out fileExist, "public");
 
+                            bool isChanged = changeFileVisibility(filename, clientName, out bool fileExist, "public");
                             if (!fileExist)
                             {
                                 responseMessage += filename + ".txt is not found for " + clientName;
@@ -804,7 +874,7 @@ namespace Assignment1Server
                                 {
                                     partialdata = partialdata.Substring(0, partialdata.IndexOf("\0"));
                                 }
-                                logs.AppendText("Counter is " + counter + "\n");
+                                logs.AppendText(counter + "\n");
                                 if (partialdata.Length > 0)
                                 {
                                     fileMessage += partialdata;
@@ -813,7 +883,6 @@ namespace Assignment1Server
                                 doesEndWith = checkFileEnd(partialdata);
                                 if (doesEndWith)
                                 {
-                                    logs.AppendText("partial data ends with !end!  with counter " + counter + "\n");
                                     break;
                                 }
                             }
@@ -822,7 +891,7 @@ namespace Assignment1Server
                             string clientName = clientNames[ioc];
                             string filename_to_write = "", status = "private";
 
-                            int fileCountNumber = filenameExists(clientName, filename);
+                            int fileCountNumber = filenameExists(clientName, filename, out bool temp);
 
                             // if file exist before.
                             if (fileCountNumber != -1)
@@ -877,15 +946,13 @@ namespace Assignment1Server
                     }
 
                 }
-                catch (Exception error)
+                catch (Exception)
                 {
-                    logs.AppendText("Errro: " + error.ToString() + "\n");
                     if (!terminating)
                     {
                         logs.AppendText("A client has disconnected\n");
                     }
                     int thisClientIdx = clientIndexes[thisClient];
-
                     clientIndexes.Remove(thisClient);
                     currentUserIdx--;
 
