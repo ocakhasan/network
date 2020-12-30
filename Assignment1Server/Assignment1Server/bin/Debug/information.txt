@@ -1,3 +1,6 @@
-Hasan mbfile 3 Hasan-mbfile03.txt 30/12/2020.16:37:33 1184391 private
-Hasan mbfile 7 Hasan-mbfile07.txt 30/12/2020.16:38:22 1184391 private
-Hasan mbfile 8 Hasan-mbfile08.txt 30/12/2020.16:38:30 1184391 private
+burak message 0 burak-message.txt 30/12/2020.17:28:32 6758 private
+Hasan message 0 Hasan-message.txt 30/12/2020.17:29:32 6758 public
+burak message 1 burak-message01.txt 30/12/2020.17:58:48 6758 public
+Hasan mbfile 0 Hasan-mbfile.txt 30/12/2020.18:14:31 1184391 public
+Hasan mbfile 1 Hasan-mbfile01.txt 30/12/2020.18:14:39 1184391 public
+Hasan mbfile 2 Hasan-mbfile02.txt 30/12/2020.18:14:41 1184391 public
