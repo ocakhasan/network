@@ -91,9 +91,11 @@ namespace Assignment1Server
             return false;
         }
 
-        private int filenameExists(string client_name, string filename)
+        private int filenameExists(string client_name, string filename, out bool fullFilenameExists)
         {
 
+            // fullFilenameExists = true indicates that given file has <client_name>-<filenameWithFileCount> structure.
+            fullFilenameExists = false;
             string line;
             int count = -1;
             StreamReader file = new StreamReader(fullPathDb);
@@ -102,14 +104,25 @@ namespace Assignment1Server
                 while ((line = file.ReadLine()) != null)
                 {
                     string[] words = line.Split(' ');
-                    string[] fullFileArr = words[3].Split('-');
-                    string fileNamecount = fullFileArr[1];
-                    if (fileNamecount.EndsWith(".txt"))
+                    string fullFileName = words[3];
+                    if (fullFileName.EndsWith(".txt"))
                     {
-                        fileNamecount = fileNamecount.Substring(0, fileNamecount.Length - 4);
+                        fullFileName = fullFileName.Substring(0, fullFileName.Length - 4);
                     }
-                    if (words[0] == client_name && (words[1] == filename || fileNamecount == filename))
+                    bool recordEqualsFileInput = fullFileName == filename;
+                    if (fullFilenameExists && filename.Length <= fullFileName.Length)
                     {
+                        if (fullFileName.Substring(0, filename.Length) == filename)
+                        {
+                            recordEqualsFileInput = true;
+                        }
+                    }
+                    if (words[0] == client_name && (words[1] == filename || recordEqualsFileInput))
+                    {
+                        if (fullFileName == filename)
+                        {
+                            fullFilenameExists = true;
+                        }
                         string strCount = words[2];
                         if (Int32.TryParse(strCount, out count))
                         {
@@ -190,7 +203,7 @@ namespace Assignment1Server
             return "";
         }
 
-        // getFieldFromDB returns a field for the specified file name.
+        // getFieldFromDB returns a field of the specified file for given clientName
         private string getFieldFromDB(int fieldIndex, string filename, string clientName = "")
         {
             string line = "";
@@ -239,7 +252,8 @@ namespace Assignment1Server
                     filename = filename.Substring(0, filename.Length - 4);
                 }
 
-                int fileCountNumber = filenameExists(clientName, filename);
+                bool fullFilenameInput = false;
+                int fileCountNumber = filenameExists(clientName, filename, out fullFilenameInput);
                 if (fileCountNumber == -1)
                 {
                     logs.AppendText(filename + " couldn't found for the user " + clientName + "\n");
@@ -247,6 +261,39 @@ namespace Assignment1Server
                     return false;
                 }
 
+                // if fullFilenameInput is true, we have <client_name>-<filenameCount> file input.
+                // therefore, we need to parse it to obtain real file name.
+                if (fullFilenameInput)
+                {
+                    // - Until the dash, we have client name. We are going to extract client name from the input 
+                    // - indexOfFileCount indicates the starting index of the file count within the filename input given as a parameter.
+                    int indexOfDash = filename.IndexOf('-'), indexOfFileCount = -1;
+
+                    // Now we obtained a filename without client name.
+                    filename = filename.Substring(indexOfDash + 1, filename.Length - 1 - indexOfDash);
+
+                    // However, we may have a file count in the end of the filename.
+                    // Iterate through the filename to find the first occurrences of the count.
+                    // Increment the value of the indexOfFileCount based on iteration
+                    int filenameLength = filename.Length;
+                    for (int i = filenameLength - 1; i >= 0; i--)
+                    {
+                        int temp;
+                        // if the char of the filename can be an integer, it reflects count
+                        if (Int32.TryParse(filename[i].ToString(), out temp))
+                        {
+                            indexOfFileCount = filenameLength - i;
+                        }
+                        else { break; }
+                    }
+                    // If there exists any file count in the filename, extract this part from the filename.
+                    if (indexOfFileCount != -1)
+                    {
+                        filename = filename.Substring(0, filename.Length - indexOfFileCount);
+                    }
+                }
+
+                // filename_to_write will be used as a filename for the copy of the actual file.
                 string filename_to_write = "";
                 if (fileCountNumber < 10)
                 {
@@ -263,9 +310,10 @@ namespace Assignment1Server
 
                 File.Copy(sourceFileDest, copiedFileDest, true);
 
+                // In order to create a proper record, we need file size and the status(public or priv.) of the file
                 string fileSize = getFieldFromDB(5, filename, clientName);
-
                 string status = getFileStatus(filename);
+
                 // create a record in the db for the copied file
                 using (StreamWriter sw = File.AppendText(fullPathDb))
                 {
@@ -276,15 +324,10 @@ namespace Assignment1Server
                     {
                         logs.AppendText("File size for the " + filename + " couldn't found in the DB.\n");
                     }
+
                     if (fileCountNumber != -1)
                     {
                         to_send = clientName + " " + filename + " " + fileCountNumber
-                            + " " + filename_to_write + " " + currDate + " " + fileSize
-                            + " " + status;
-                    }
-                    else
-                    {
-                        to_send = clientName + " " + filename + " " + "0"
                             + " " + filename_to_write + " " + currDate + " " + fileSize
                             + " " + status;
                     }
@@ -356,7 +399,8 @@ namespace Assignment1Server
         {
             try
             {
-                int fileCountNumber = filenameExists(clientName, filename);
+                bool temp;
+                int fileCountNumber = filenameExists(clientName, filename, out temp);
                 string tempFilename = "";
 
                 if (fileCountNumber - 1 == 0)
@@ -414,7 +458,8 @@ namespace Assignment1Server
         {
             try
             {
-                int fileCountNumber = filenameExists(clientName, filename);
+                bool temp = false;
+                int fileCountNumber = filenameExists(clientName, filename, out temp);
                 string tempFilename = "", tempClient = "";
 
                 string fileVisibility = getFileStatus(filename);
@@ -482,7 +527,8 @@ namespace Assignment1Server
         {
             try
             {
-                int fileCountNumber = filenameExists(clientName, filename);
+                bool temp = false;
+                int fileCountNumber = filenameExists(clientName, filename, out temp);
                 string tempFilename = "";
 
                 if (fileCountNumber == -1)
@@ -822,7 +868,8 @@ namespace Assignment1Server
                             string clientName = clientNames[ioc];
                             string filename_to_write = "", status = "private";
 
-                            int fileCountNumber = filenameExists(clientName, filename);
+                            bool temp = false;
+                            int fileCountNumber = filenameExists(clientName, filename, out temp);
 
                             // if file exist before.
                             if (fileCountNumber != -1)
