@@ -911,6 +911,7 @@ namespace Assignment1Server
                                     break;
                                 }
                             }
+                            logs.AppendText("File received\n");
 
                             ioc = clientSockets.IndexOf(thisClient);
                             string clientName = clientNames[ioc];

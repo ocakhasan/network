@@ -349,7 +349,7 @@ namespace Assignment1Client
 
         private void Button_create_copy_Click(object sender, EventArgs e)
         {
-            if (checkBox_public.Checked || label_public_owner.Text != "")
+            if (checkBox_public.Checked)
             {
                 logs.AppendText("You cannot create copy of the public files.\n");
                 return;
@@ -380,7 +380,7 @@ namespace Assignment1Client
 
         private void Button_delete_Click(object sender, EventArgs e)
         {
-            if (checkBox_public.Checked || label_public_owner.Text != "")
+            if (checkBox_public.Checked)
             {
                 logs.AppendText("You cannot delete public files.\n");
                 return;
@@ -477,7 +477,7 @@ namespace Assignment1Client
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            if (checkBox_public.Checked || label_public_owner.Text != "")
+            if (checkBox_public.Checked)
             {
                 logs.AppendText("You cannot change the visibility of public files.\n");
                 return;
