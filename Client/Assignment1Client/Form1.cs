@@ -80,6 +80,7 @@ namespace Assignment1Client
             button_download.Visible = option;
             button_make_public.Visible = option;
             button_get_public.Visible = option;
+            checkBox_public.Visible = option;
         }
 
         private void Receive()
@@ -348,6 +349,11 @@ namespace Assignment1Client
 
         private void Button_create_copy_Click(object sender, EventArgs e)
         {
+            if (checkBox_public.Checked)
+            {
+                logs.AppendText("You cannot create copy of the public files.\n");
+                return;
+            }
 
             string inputFilename = textBox_filename.Text;
             string createCopyCommand = "!cc!" + inputFilename;
@@ -374,6 +380,12 @@ namespace Assignment1Client
 
         private void Button_delete_Click(object sender, EventArgs e)
         {
+            if (checkBox_public.Checked)
+            {
+                logs.AppendText("You cannot delete public files.\n");
+                return;
+            }
+
             string inputFilename = textBox_filename.Text;
             string deleteFileCommand = "!del!" + inputFilename;
             try
@@ -400,30 +412,48 @@ namespace Assignment1Client
 
         private void Button_download_Click(object sender, EventArgs e)
         {
-            using (var fbd = new FolderBrowserDialog())
+
+            if (checkBox_public.Checked && textBox_public_owner.Text == "")
             {
-                DialogResult result = fbd.ShowDialog();
-                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-                {
-                    string[] files = Directory.GetFiles(fbd.SelectedPath);
-                    logs.AppendText("Selected path: " + fbd.SelectedPath + "\n");
-                    downloadFolder = fbd.SelectedPath;
-                }
-                else
-                {
-                    downloadFolder = "";
-                }
+                logs.AppendText("If requested file is public, specify the owner name.\n");
+                return;
             }
+
+            //using (var fbd = new FolderBrowserDialog())
+            //{
+            //    DialogResult result = fbd.ShowDialog();
+            //    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+            //    {
+            //        string[] files = Directory.GetFiles(fbd.SelectedPath);
+            //        logs.AppendText("Selected path: " + fbd.SelectedPath + "\n");
+            //        downloadFolder = fbd.SelectedPath;
+            //    }
+            //    else
+            //    {
+            //        downloadFolder = "";
+            //    }
+            //}
+
+            downloadFolder = @"C:\Users\ASUS\Desktop\downloaded";
+
             if (downloadFolder == "" || downloadFolder.Length == 0)
             {
                 logs.AppendText("You need to specify valid path!\n");
                 return;
             }
 
+            string owner = textBox_public_owner.Text;
             try
             {
-                string inputFilename = textBox_filename.Text;
-                string downloadFileCommand = "!df!" + inputFilename;
+                string inputFilename = textBox_filename.Text, downloadFileCommand;
+                if (owner != "" || owner.Trim() != "")
+                {
+                    downloadFileCommand = "!df!~" + owner + "`" + inputFilename;
+                }
+                else
+                {
+                    downloadFileCommand = "!df!" + inputFilename;
+                }
 
                 Byte[] commandBuffer = new Byte[512];
                 commandBuffer = Encoding.Default.GetBytes(downloadFileCommand);
@@ -447,9 +477,13 @@ namespace Assignment1Client
 
         private void Button1_Click(object sender, EventArgs e)
         {
+            if (checkBox_public.Checked)
+            {
+                logs.AppendText("You cannot change the visibility of public files.\n");
+                return;
+            }
             string inputFilename = textBox_filename.Text;
             string makePublicCommand = "!mp!" + inputFilename;
-
             try
             {
 
@@ -495,6 +529,16 @@ namespace Assignment1Client
                 }
                 clientSocket.Close();
                 connected = false;
+            }
+        }
+
+        private void CheckBox_public_CheckedChanged(object sender, EventArgs e)
+        {
+            label_public_owner.Visible = !label_public_owner.Visible;
+            textBox_public_owner.Visible = !textBox_public_owner.Visible;
+            if (!textBox_public_owner.Visible)
+            {
+                textBox_public_owner.Text = "";
             }
         }
     }

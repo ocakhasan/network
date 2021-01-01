@@ -1,6 +1,7 @@
-burak message 0 burak-message.txt 30/12/2020.17:28:32 6758 private
-Hasan message 0 Hasan-message.txt 30/12/2020.17:29:32 6758 public
-burak message 1 burak-message01.txt 30/12/2020.17:58:48 6758 public
-Hasan mbfile 0 Hasan-mbfile.txt 30/12/2020.18:14:31 1184391 public
-Hasan mbfile 1 Hasan-mbfile01.txt 30/12/2020.18:14:39 1184391 public
-Hasan mbfile 2 Hasan-mbfile02.txt 30/12/2020.18:14:41 1184391 public
+burak kapital 0 burak-kapital.txt 01/01/2021.19:16:49 179605637 private
+Hasan mbfile 0 Hasan-mbfile.txt 01/01/2021.19:19:09 1184391 private
+Hasan mbfile 1 Hasan-mbfile01.txt 01/01/2021.19:19:15 1184391 public
+burak mbfile 0 burak-mbfile.txt 01/01/2021.19:20:20 1184391 private
+burak mbfile 1 burak-mbfile01.txt 01/01/2021.19:20:30 1184391 private
+Hasan message 0 Hasan-message.txt 01/01/2021.19:24:15 6758 private
+Hasan2 mbfile 0 Hasan2-mbfile.txt 01/01/2021.19:24:24 1184391 private

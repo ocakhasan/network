@@ -46,6 +46,9 @@
             this.button_download = new System.Windows.Forms.Button();
             this.button_make_public = new System.Windows.Forms.Button();
             this.button_get_public = new System.Windows.Forms.Button();
+            this.label_public_owner = new System.Windows.Forms.Label();
+            this.textBox_public_owner = new System.Windows.Forms.TextBox();
+            this.checkBox_public = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -113,7 +116,7 @@
             // 
             this.logs.Location = new System.Drawing.Point(359, 31);
             this.logs.Name = "logs";
-            this.logs.Size = new System.Drawing.Size(376, 334);
+            this.logs.Size = new System.Drawing.Size(376, 378);
             this.logs.TabIndex = 7;
             this.logs.Text = "";
             // 
@@ -191,9 +194,9 @@
             // 
             // button_download
             // 
-            this.button_download.Location = new System.Drawing.Point(216, 357);
+            this.button_download.Location = new System.Drawing.Point(29, 386);
             this.button_download.Name = "button_download";
-            this.button_download.Size = new System.Drawing.Size(92, 23);
+            this.button_download.Size = new System.Drawing.Size(97, 23);
             this.button_download.TabIndex = 17;
             this.button_download.Text = "DOWNLOAD";
             this.button_download.UseVisualStyleBackColor = true;
@@ -204,7 +207,7 @@
             // 
             this.button_make_public.Location = new System.Drawing.Point(216, 331);
             this.button_make_public.Name = "button_make_public";
-            this.button_make_public.Size = new System.Drawing.Size(92, 23);
+            this.button_make_public.Size = new System.Drawing.Size(122, 23);
             this.button_make_public.TabIndex = 18;
             this.button_make_public.Text = "MAKE PUBLIC";
             this.button_make_public.UseVisualStyleBackColor = true;
@@ -213,20 +216,53 @@
             // 
             // button_get_public
             // 
-            this.button_get_public.Location = new System.Drawing.Point(116, 386);
+            this.button_get_public.Location = new System.Drawing.Point(216, 357);
             this.button_get_public.Name = "button_get_public";
-            this.button_get_public.Size = new System.Drawing.Size(112, 23);
+            this.button_get_public.Size = new System.Drawing.Size(122, 23);
             this.button_get_public.TabIndex = 19;
             this.button_get_public.Text = "GET PUBLIC FILES";
             this.button_get_public.UseVisualStyleBackColor = true;
             this.button_get_public.Visible = false;
             this.button_get_public.Click += new System.EventHandler(this.Button_get_public_Click);
             // 
+            // label_public_owner
+            // 
+            this.label_public_owner.AutoSize = true;
+            this.label_public_owner.Location = new System.Drawing.Point(130, 424);
+            this.label_public_owner.Name = "label_public_owner";
+            this.label_public_owner.Size = new System.Drawing.Size(49, 13);
+            this.label_public_owner.TabIndex = 22;
+            this.label_public_owner.Text = "OWNER";
+            this.label_public_owner.Visible = false;
+            // 
+            // textBox_public_owner
+            // 
+            this.textBox_public_owner.Location = new System.Drawing.Point(185, 421);
+            this.textBox_public_owner.Name = "textBox_public_owner";
+            this.textBox_public_owner.Size = new System.Drawing.Size(81, 20);
+            this.textBox_public_owner.TabIndex = 21;
+            this.textBox_public_owner.Visible = false;
+            // 
+            // checkBox_public
+            // 
+            this.checkBox_public.AutoSize = true;
+            this.checkBox_public.Location = new System.Drawing.Point(133, 390);
+            this.checkBox_public.Name = "checkBox_public";
+            this.checkBox_public.Size = new System.Drawing.Size(83, 17);
+            this.checkBox_public.TabIndex = 23;
+            this.checkBox_public.Text = "IS PUBLIC?";
+            this.checkBox_public.UseVisualStyleBackColor = true;
+            this.checkBox_public.Visible = false;
+            this.checkBox_public.CheckedChanged += new System.EventHandler(this.CheckBox_public_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(783, 413);
+            this.ClientSize = new System.Drawing.Size(790, 477);
+            this.Controls.Add(this.checkBox_public);
+            this.Controls.Add(this.label_public_owner);
+            this.Controls.Add(this.textBox_public_owner);
             this.Controls.Add(this.button_get_public);
             this.Controls.Add(this.button_make_public);
             this.Controls.Add(this.button_download);
@@ -272,6 +308,9 @@
         private System.Windows.Forms.Button button_download;
         private System.Windows.Forms.Button button_make_public;
         private System.Windows.Forms.Button button_get_public;
+        private System.Windows.Forms.Label label_public_owner;
+        private System.Windows.Forms.TextBox textBox_public_owner;
+        private System.Windows.Forms.CheckBox checkBox_public;
     }
 }
 
